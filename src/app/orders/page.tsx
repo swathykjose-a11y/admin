@@ -1,8 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Filter, Truck } from "lucide-react";
+import { Search, Truck } from "lucide-react";
 import { Badge } from "../../components/Badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/tabs";
+import { Card, CardContent } from "../../components/ui/card";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../../components/ui/table";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "../../components/ui/dialog";
 
 const sampleOrders = [
   {
@@ -61,15 +74,33 @@ const sampleOrders = [
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState(sampleOrders);
+  const [activeTab, setActiveTab] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<typeof sampleOrders[0] | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState("");
   const [carrier, setCarrier] = useState("FedEx");
+  const [search, setSearch] = useState("");
+
+  const filteredOrders = orders.filter((o) => {
+    const matchesTab = activeTab === "all" || o.status === activeTab;
+    const matchesSearch = 
+      o.orderNumber.toLowerCase().includes(search.toLowerCase()) ||
+      o.customerName.toLowerCase().includes(search.toLowerCase()) ||
+      o.customerEmail.toLowerCase().includes(search.toLowerCase());
+    return matchesTab && matchesSearch;
+  });
+
+  const openFulfillmentModal = (order: typeof sampleOrders[0]) => {
+    setSelectedOrder(order);
+    setDialogOpen(true);
+  };
 
   const handleUpdateStatus = (status: string) => {
     if (!selectedOrder) return;
     setOrders((prev) =>
       prev.map((o) => (o.id === selectedOrder.id ? { ...o, status } : o))
     );
+    setDialogOpen(false);
     setSelectedOrder(null);
   };
 
@@ -77,149 +108,153 @@ export default function OrdersPage() {
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-[#111815]">Orders & Fulfillment</h1>
-        <p className="text-sm text-[#737F76] mt-0.5">
-          Process customer orders, print labels, verify payments, and dispatch shipments.
+        <h1 className="text-2xl font-bold tracking-tight text-[#1A211D]">Orders & Fulfillment</h1>
+        <p className="text-xs text-[#737F76] mt-0.5">
+          Process customer orders, verify Stripe/Razorpay webhooks, and dispatch shipments.
         </p>
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-xl border border-[#E2E8E4] flex flex-col sm:flex-row gap-3 items-center justify-between shadow-xs">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-[#737F76] absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search by order #, email, or name..."
-            className="w-full pl-9 pr-4 py-2 text-sm bg-[#F8FAF9] border border-[#E2E8E4] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#194F36]"
-          />
-        </div>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <TabsList>
+            <TabsTrigger value="all">All ({orders.length})</TabsTrigger>
+            <TabsTrigger value="processing">Processing ({orders.filter(o => o.status === "processing").length})</TabsTrigger>
+            <TabsTrigger value="shipped">Shipped ({orders.filter(o => o.status === "shipped").length})</TabsTrigger>
+            <TabsTrigger value="delivered">Delivered ({orders.filter(o => o.status === "delivered").length})</TabsTrigger>
+          </TabsList>
 
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-[#58635D] bg-[#F8FAF9] hover:bg-[#F2F5EF] border border-[#E2E8E4] rounded-lg transition-colors">
-            <Filter className="w-3.5 h-3.5" />
-            Payment: All
-          </button>
-          <button className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-[#58635D] bg-[#F8FAF9] hover:bg-[#F2F5EF] border border-[#E2E8E4] rounded-lg transition-colors">
-            Fulfillment: All
-          </button>
-        </div>
-      </div>
-
-      {/* Orders Table */}
-      <div className="bg-white border border-[#E2E8E4] rounded-xl overflow-hidden shadow-xs">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-[#F8FAF9] text-xs font-semibold text-[#737F76] uppercase tracking-wider border-b border-[#E2E8E4]">
-            <tr>
-              <th className="px-6 py-3">Order</th>
-              <th className="px-6 py-3">Date</th>
-              <th className="px-6 py-3">Customer</th>
-              <th className="px-6 py-3">Gateway</th>
-              <th className="px-6 py-3">Payment</th>
-              <th className="px-6 py-3">Fulfillment</th>
-              <th className="px-6 py-3">Total</th>
-              <th className="px-6 py-3 text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#E2E8E4]">
-            {orders.map((ord) => (
-              <tr key={ord.id} className="hover:bg-[#F2F5EF]/50 transition-colors">
-                <td className="px-6 py-4 font-mono text-xs font-semibold text-[#111815]">
-                  {ord.orderNumber}
-                </td>
-                <td className="px-6 py-4 text-xs text-[#737F76]">{ord.date}</td>
-                <td className="px-6 py-4">
-                  <div className="font-medium text-[#111815]">{ord.customerName}</div>
-                  <div className="text-xs text-[#737F76]">{ord.customerEmail}</div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="uppercase text-xs font-semibold tracking-wider text-[#58635D]">
-                    {ord.paymentProvider}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <Badge status={ord.paymentStatus} />
-                </td>
-                <td className="px-6 py-4">
-                  <Badge status={ord.status} />
-                </td>
-                <td className="px-6 py-4 font-bold text-[#111815]">{ord.total}</td>
-                <td className="px-6 py-4 text-right">
-                  <button
-                    onClick={() => setSelectedOrder(ord)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#194F36] hover:bg-[#EAF3EE] border border-[#D5DDD6] rounded-lg transition-colors"
-                  >
-                    <Truck className="w-3.5 h-3.5" />
-                    Fulfill
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Fulfillment Modal */}
-      {selectedOrder && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl border border-[#E2E8E4] p-6 max-w-md w-full shadow-xl space-y-4">
-            <h3 className="text-lg font-bold text-[#111815]">
-              Fulfill Order {selectedOrder.orderNumber}
-            </h3>
-            <p className="text-xs text-[#737F76]">
-              Ship to: {selectedOrder.shippingAddress}
-            </p>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-[#737F76] mb-1">
-                  Shipping Carrier
-                </label>
-                <select
-                  value={carrier}
-                  onChange={(e) => setCarrier(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-[#F8FAF9] border border-[#E2E8E4] rounded-lg"
-                >
-                  <option value="FedEx">FedEx</option>
-                  <option value="UPS">UPS</option>
-                  <option value="DHL">DHL Express</option>
-                  <option value="BlueDart">Blue Dart / Delhivery</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#737F76] mb-1">
-                  Tracking Number
-                </label>
-                <input
-                  type="text"
-                  value={trackingNumber}
-                  onChange={(e) => setTrackingNumber(e.target.value)}
-                  placeholder="e.g. 1Z9999999999999999"
-                  className="w-full px-3 py-2 text-sm bg-[#F8FAF9] border border-[#E2E8E4] rounded-lg"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-4 border-t border-[#E2E8E4]">
-              <button
-                type="button"
-                onClick={() => setSelectedOrder(null)}
-                className="px-4 py-2 text-xs font-medium text-[#58635D] hover:bg-[#F2F5EF] rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => handleUpdateStatus("shipped")}
-                className="px-4 py-2 text-xs font-medium bg-[#194F36] hover:bg-[#133D2A] text-white rounded-lg transition-colors"
-              >
-                Mark as Shipped & Notify Customer
-              </button>
-            </div>
+          <div className="relative w-full sm:w-72">
+            <Search className="w-4 h-4 text-[#737F76] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by order #, name..."
+              className="pl-9 bg-white border-[#D5DDD6]"
+            />
           </div>
         </div>
-      )}
+
+        <TabsContent value={activeTab} className="mt-4">
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Gateway</TableHead>
+                    <TableHead>Payment</TableHead>
+                    <TableHead>Fulfillment</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredOrders.map((ord) => (
+                    <TableRow key={ord.id}>
+                      <TableCell className="font-mono text-xs font-bold text-[#1A211D]">
+                        {ord.orderNumber}
+                      </TableCell>
+                      <TableCell className="text-xs text-[#737F76]">{ord.date}</TableCell>
+                      <TableCell>
+                        <div className="font-semibold text-xs text-[#1A211D]">{ord.customerName}</div>
+                        <div className="text-[11px] text-[#737F76]">{ord.customerEmail}</div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="uppercase text-[11px] font-bold text-[#58635D]">
+                          {ord.paymentProvider}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge status={ord.paymentStatus} />
+                      </TableCell>
+                      <TableCell>
+                        <Badge status={ord.status} />
+                      </TableCell>
+                      <TableCell className="font-extrabold text-[#1A211D]">{ord.total}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openFulfillmentModal(ord)}
+                          className="h-8 text-xs border-[#D5DDD6] text-[#194F36] hover:bg-[#EAF3EE]"
+                        >
+                          <Truck className="w-3.5 h-3.5 mr-1" />
+                          Fulfill
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filteredOrders.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-xs text-[#737F76]">
+                        No orders in this state.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Shadcn Dialog for Fulfillment */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Fulfill Order {selectedOrder?.orderNumber}</DialogTitle>
+            <DialogDescription>
+              Ship to: {selectedOrder?.shippingAddress}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="block text-xs font-semibold text-[#737F76] uppercase tracking-wider mb-1.5">
+                Shipping Carrier
+              </label>
+              <select
+                value={carrier}
+                onChange={(e) => setCarrier(e.target.value)}
+                className="w-full h-9 px-3 text-sm bg-white border border-[#D5DDD6] rounded-lg"
+              >
+                <option value="FedEx">FedEx</option>
+                <option value="UPS">UPS</option>
+                <option value="DHL">DHL Express</option>
+                <option value="BlueDart">Blue Dart / Delhivery</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[#737F76] uppercase tracking-wider mb-1.5">
+                Tracking Number
+              </label>
+              <Input
+                type="text"
+                value={trackingNumber}
+                onChange={(e) => setTrackingNumber(e.target.value)}
+                placeholder="e.g. 1Z9999999999999999"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-[#194F36] hover:bg-[#133D2A] text-white"
+              onClick={() => handleUpdateStatus("shipped")}
+            >
+              Mark as Shipped & Notify
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-

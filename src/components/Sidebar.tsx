@@ -11,6 +11,7 @@ import {
   ExternalLink,
   Store
 } from "lucide-react";
+import { Badge } from "./ui/badge";
 
 const navItems = [
   { name: "Overview", href: "/", icon: LayoutDashboard },
@@ -24,14 +25,19 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 bg-white border-r border-[#E2E8E4] flex flex-col min-h-screen">
+    <aside className="w-64 bg-white border-r border-[#D5DDD6] flex flex-col min-h-screen">
       {/* Brand */}
-      <div className="h-16 flex items-center px-6 border-b border-[#E2E8E4] gap-2">
-        <Store className="w-5 h-5 text-[#194F36]" />
-        <span className="font-semibold text-lg tracking-tight text-[#111815]">Dainty Admin</span>
-        <span className="text-xs bg-[#EAF3EE] text-[#194F36] px-2 py-0.5 rounded-full font-medium ml-auto">
+      <div className="h-16 flex items-center px-6 border-b border-[#D5DDD6] gap-2.5">
+        <div className="w-8 h-8 rounded-lg bg-[#EAF3EE] flex items-center justify-center text-[#194F36]">
+          <Store className="w-4 h-4" />
+        </div>
+        <div className="flex flex-col">
+          <span className="font-bold text-sm tracking-tight text-[#1A211D]">Dainty Admin</span>
+          <span className="text-[10px] text-[#737F76]">E-Commerce Engine</span>
+        </div>
+        <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0">
           Edge
-        </span>
+        </Badge>
       </div>
 
       {/* Navigation */}
@@ -43,10 +49,10 @@ export function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                 isActive
-                  ? "bg-[#194F36] text-white"
-                  : "text-[#58635D] hover:bg-[#F2F5EF] hover:text-[#111815]"
+                  ? "bg-[#194F36] text-white shadow-xs"
+                  : "text-[#58635D] hover:bg-[#F2F5EF] hover:text-[#1A211D]"
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -57,18 +63,17 @@ export function Sidebar() {
       </nav>
 
       {/* Footer / Storefront link */}
-      <div className="p-4 border-t border-[#E2E8E4]">
+      <div className="p-4 border-t border-[#D5DDD6]">
         <a
           href="http://localhost:3000"
           target="_blank"
           rel="noreferrer"
-          className="flex items-center justify-between px-3 py-2 text-xs font-medium text-[#58635D] hover:text-[#194F36] bg-[#F8FAF9] hover:bg-[#F2F5EF] rounded-lg transition-colors border border-[#E2E8E4]"
+          className="flex items-center justify-between px-3 py-2 text-xs font-medium text-[#58635D] hover:text-[#194F36] bg-[#F2F5EF] hover:bg-[#EAF3EE] rounded-lg transition-colors border border-[#D5DDD6]"
         >
-          <span>View Live Storefront</span>
+          <span>Live Storefront</span>
           <ExternalLink className="w-3.5 h-3.5" />
         </a>
       </div>
     </aside>
   );
 }
-

@@ -6,6 +6,9 @@ import Link from "next/link";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { ImageUploader } from "../../../components/ImageUploader";
 import { api } from "../../../lib/api";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -23,7 +26,6 @@ export default function NewProductPage() {
 
   const handleTitleChange = (val: string) => {
     setTitle(val);
-    // Auto-generate slug
     setSlug(
       val
         .toLowerCase()
@@ -64,172 +66,174 @@ export default function NewProductPage() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto">
       {/* Top Bar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link
-            href="/products"
-            className="p-2 text-[#737F76] hover:text-[#111815] bg-white border border-[#E2E8E4] rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
+          <Button variant="outline" size="icon" asChild className="h-9 w-9">
+            <Link href="/products">
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+          </Button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-[#111815]">Add New Product</h1>
-            <p className="text-xs text-[#737F76]">Create item in Neon Postgres and host assets on Cloudflare R2</p>
+            <h1 className="text-2xl font-bold tracking-tight text-[#1A211D]">Add Product</h1>
+            <p className="text-xs text-[#737F76]">Upload media to Cloudflare R2 and save in Neon Postgres</p>
           </div>
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={loading}
-          className="inline-flex items-center gap-2 bg-[#194F36] hover:bg-[#133D2A] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-xs disabled:opacity-50"
+          className="bg-[#194F36] hover:bg-[#133D2A] text-white"
         >
           {loading ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
               Saving...
             </>
           ) : (
             <>
-              <Save className="w-4 h-4" />
+              <Save className="w-4 h-4 mr-1.5" />
               Save Product
             </>
           )}
-        </button>
+        </Button>
       </div>
 
       {error && (
-        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-xl">
+        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-xl">
           {error}
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left Column: Core Info */}
         <div className="md:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-xl border border-[#E2E8E4] space-y-4">
-            <h3 className="text-base font-semibold text-[#111815]">General Information</h3>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#737F76] uppercase tracking-wider mb-1">
-                Product Title *
-              </label>
-              <input
-                type="text"
-                required
-                value={title}
-                onChange={(e) => handleTitleChange(e.target.value)}
-                placeholder="e.g. Ceramic Teapot"
-                className="w-full px-3.5 py-2 text-sm bg-[#F8FAF9] border border-[#E2E8E4] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#194F36]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#737F76] uppercase tracking-wider mb-1">
-                URL Slug *
-              </label>
-              <input
-                type="text"
-                required
-                value={slug}
-                onChange={(e) => setSlug(e.target.value)}
-                placeholder="ceramic-teapot"
-                className="w-full px-3.5 py-2 text-sm font-mono bg-[#F8FAF9] border border-[#E2E8E4] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#194F36]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#737F76] uppercase tracking-wider mb-1">
-                Description
-              </label>
-              <textarea
-                rows={4}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe your product materials, dimensions, and story..."
-                className="w-full px-3.5 py-2 text-sm bg-[#F8FAF9] border border-[#E2E8E4] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#194F36]"
-              />
-            </div>
-          </div>
-
-          {/* Cloudflare R2 Upload Component */}
-          <div className="bg-white p-6 rounded-xl border border-[#E2E8E4]">
-            <ImageUploader
-              onImageUploaded={(img) => setUploadedImages((prev) => [...prev, img])}
-            />
-          </div>
-
-          {/* Pricing */}
-          <div className="bg-white p-6 rounded-xl border border-[#E2E8E4] space-y-4">
-            <h3 className="text-base font-semibold text-[#111815]">Pricing & Value</h3>
-            <div className="grid grid-cols-2 gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Product Details</CardTitle>
+              <CardDescription>Title, slug, and description</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#737F76] uppercase tracking-wider mb-1">
-                  Selling Price ($) *
+                <label className="block text-xs font-semibold text-[#737F76] uppercase tracking-wider mb-1.5">
+                  Title *
                 </label>
-                <input
+                <Input
+                  required
+                  value={title}
+                  onChange={(e) => handleTitleChange(e.target.value)}
+                  placeholder="e.g. Minimalist Ceramic Matcha Bowl"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#737F76] uppercase tracking-wider mb-1.5">
+                  Slug *
+                </label>
+                <Input
+                  required
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  className="font-mono text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#737F76] uppercase tracking-wider mb-1.5">
+                  Description
+                </label>
+                <textarea
+                  rows={4}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Materials, origin, care instructions..."
+                  className="w-full px-3 py-2 text-sm bg-white border border-[#D5DDD6] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#194F36]"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Media (Cloudflare R2)</CardTitle>
+              <CardDescription>Direct S3 presigned upload with zero egress fees</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ImageUploader
+                onImageUploaded={(img) => setUploadedImages((prev) => [...prev, img])}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Pricing</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-[#737F76] uppercase tracking-wider mb-1.5">
+                  Price ($) *
+                </label>
+                <Input
                   type="number"
                   step="0.01"
                   required
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   placeholder="48.00"
-                  className="w-full px-3.5 py-2 text-sm bg-[#F8FAF9] border border-[#E2E8E4] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#194F36]"
                 />
               </div>
-
               <div>
-                <label className="block text-xs font-semibold text-[#737F76] uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-[#737F76] uppercase tracking-wider mb-1.5">
                   Compare at Price ($)
                 </label>
-                <input
+                <Input
                   type="number"
                   step="0.01"
                   value={compareAtPrice}
                   onChange={(e) => setCompareAtPrice(e.target.value)}
                   placeholder="60.00"
-                  className="w-full px-3.5 py-2 text-sm bg-[#F8FAF9] border border-[#E2E8E4] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#194F36]"
                 />
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Right Column: Status & Placement */}
         <div className="space-y-6">
-          <div className="bg-white p-6 rounded-xl border border-[#E2E8E4] space-y-4">
-            <h3 className="text-base font-semibold text-[#111815]">Status</h3>
+          <Card>
+            <CardHeader>
+              <CardTitle>Organization</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-[#737F76] uppercase tracking-wider mb-1.5">
+                  Visibility
+                </label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as "draft" | "published")}
+                  className="w-full h-9 px-3 text-xs bg-white border border-[#D5DDD6] rounded-lg focus:ring-1 focus:ring-[#194F36]"
+                >
+                  <option value="published">Published</option>
+                  <option value="draft">Draft</option>
+                </select>
+              </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-[#737F76] uppercase tracking-wider mb-1">
-                Visibility
-              </label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as "draft" | "published")}
-                className="w-full px-3.5 py-2 text-sm bg-[#F8FAF9] border border-[#E2E8E4] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#194F36]"
-              >
-                <option value="published">Published (Visible in store)</option>
-                <option value="draft">Draft (Hidden)</option>
-              </select>
-            </div>
-
-            <div className="pt-2 border-t border-[#E2E8E4]">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={featured}
-                  onChange={(e) => setFeatured(e.target.checked)}
-                  className="w-4 h-4 text-[#194F36] rounded border-[#E2E8E4] focus:ring-[#194F36]"
-                />
-                <span className="text-sm font-medium text-[#111815]">Feature on Homepage</span>
-              </label>
-            </div>
-          </div>
+              <div className="pt-3 border-t border-[#D5DDD6]">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={featured}
+                    onChange={(e) => setFeatured(e.target.checked)}
+                    className="w-4 h-4 text-[#194F36] rounded border-[#D5DDD6] focus:ring-[#194F36]"
+                  />
+                  <span className="text-xs font-bold text-[#1A211D]">Featured on Storefront</span>
+                </label>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </form>
   );
 }
-

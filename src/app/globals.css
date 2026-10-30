@@ -2,20 +2,62 @@
 
 @layer base {
   :root {
-    --bg-primary: #F8FAF9;
-    --card-bg: #FFFFFF;
-    --text-primary: #111815;
-    --text-secondary: #58635D;
-    --border-color: #E2E8E4;
-    --accent: #194F36;
-    --accent-hover: #133D2A;
+    --background: #F2F5EF;
+    --foreground: #1A211D;
+
+    --card: #FFFFFF;
+    --card-foreground: #1A211D;
+
+    --popover: #FFFFFF;
+    --popover-foreground: #1A211D;
+
+    --primary: #194F36;
+    --primary-foreground: #FFFFFF;
+
+    --secondary: #EAF3EE;
+    --secondary-foreground: #194F36;
+
+    --muted: #E8EFEA;
+    --muted-foreground: #737F76;
+
+    --accent: #EAF3EE;
+    --accent-foreground: #194F36;
+
+    --destructive: #DC2626;
+    --destructive-foreground: #FFFFFF;
+
+    --border: #D5DDD6;
+    --input: #D5DDD6;
+    --ring: #194F36;
+
+    --radius: 0.75rem;
+
+    /* Dainty Dazzle Brand Tokens */
+    --color-sage-canvas: #F2F5EF;
+    --color-card-white: #FFFFFF;
+    --color-charcoal: #1A211D;
+    --color-sage-border: #D5DDD6;
+    --color-sage-muted: #737F76;
+    --color-forest: #194F36;
+    --color-forest-hover: #133D2A;
+    --color-sage-tint: #EAF3EE;
   }
 
   body {
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
+    background-color: var(--background);
+    color: var(--foreground);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 }
 
+@theme {
+  --color-sage-canvas: #F2F5EF;
+  --color-card-white: #FFFFFF;
+  --color-charcoal: #1A211D;
+  --color-sage-border: #D5DDD6;
+  --color-sage-muted: #737F76;
+  --color-forest: #194F36;
+  --color-forest-hover: #133D2A;
+  --color-sage-tint: #EAF3EE;
+}
