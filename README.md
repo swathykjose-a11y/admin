@@ -37,9 +37,9 @@ Copy `.env.example` to `.env.local`:
 cp .env.example .env.local
 ```
 
-Settings:
-- `NEXT_PUBLIC_SERVER_URL`: URL of the Hono backend server (defaults to `http://localhost:8787`).
-- `NEXT_PUBLIC_ADMIN_KEY`: Shared secret key matching `ADMIN_API_KEY` on the server.
+Settings (Server-side only — never exposed to client bundles):
+- `SERVER_URL`: URL of the Hono backend server (defaults to `http://localhost:8787`).
+- `ADMIN_KEY`: Shared secret key matching `ADMIN_API_KEY` on the server.
 
 ### 3. Install & Run
 ```bash

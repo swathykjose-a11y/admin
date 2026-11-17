@@ -8,10 +8,8 @@ import type {
   OrderStatus,
 } from "@/types/admin";
 
-const SERVER_BASE_URL =
-  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:8787";
-const ADMIN_API_KEY =
-  process.env.NEXT_PUBLIC_ADMIN_KEY || "dd_admin_secret_key_change_me";
+// Note: Server URL and Admin API Key are securely handled on the server side
+// by the Next.js /api/backend proxy route, preventing exposure via NEXT_PUBLIC.
 
 // ─── Initial Mock Data for Seamless Preview ──────────────────────────────────
 let MOCK_ORDERS: AdminOrder[] = [
@@ -222,18 +220,18 @@ let MOCK_CMS = {
   },
 };
 
-// ─── HTTP Helper ─────────────────────────────────────────────────────────────
+// ─── HTTP Helper (proxied via /api/backend to keep server credentials private) ──
 async function adminFetch<T>(
   endpoint: string,
   options?: RequestInit,
 ): Promise<{ data: T | null; isFallback: boolean }> {
   try {
-    const url = `${SERVER_BASE_URL.replace(/\/+$/, "")}${endpoint}`;
+    const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+    const url = `/api/backend${cleanEndpoint}`;
     const res = await fetch(url, {
       ...options,
       headers: {
         "Content-Type": "application/json",
-        "X-Admin-Key": ADMIN_API_KEY,
         ...options?.headers,
       },
     });
