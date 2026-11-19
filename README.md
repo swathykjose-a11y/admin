@@ -4,10 +4,10 @@ Admin dashboard application built with **Next.js App Router (`src/app/`)**, **Ty
 
 ---
 
-## ⚡ Features
+## Features
 
 1. **Dropship Order Fulfillment**:
-   - Filter orders by status: `Needs Ordering` (⚠️ Action required), `Ordered at Supplier`, `Shipped`, `Delivered`.
+   - Filter orders by status: `Needs Ordering` (Action required), `Ordered at Supplier`, `Shipped`, `Delivered`.
    - **1-Click Address Copy**: Formats the customer's full address and phone number for immediate copy-pasting into AliExpress, Meesho, or supplier checkout pages.
    - **Real-Time Profit & Margin Calculator**: Automatically computes profit (Selling Price − Supplier Cost) and margin percentage.
    - **Courier Tracking Integration**: Assign courier tracking numbers and direct carrier links to keep customers informed.
@@ -26,7 +26,7 @@ Admin dashboard application built with **Next.js App Router (`src/app/`)**, **Ty
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Prerequisites
 - [Bun](https://bun.sh/) (v1.2+)

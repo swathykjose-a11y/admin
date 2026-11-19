@@ -27,7 +27,14 @@ async function proxyRequest(
       headers.set("content-type", "application/json");
     }
     headers.set("accept", "application/json");
-    headers.set("x-admin-key", ADMIN_API_KEY);
+
+    // Forward httpOnly cookie JWT token or fallback to system admin key
+    const adminToken = request.cookies.get("admin_token")?.value;
+    if (adminToken) {
+      headers.set("authorization", `Bearer ${adminToken}`);
+    } else {
+      headers.set("x-admin-key", ADMIN_API_KEY);
+    }
 
     const body = ["GET", "HEAD"].includes(request.method)
       ? undefined

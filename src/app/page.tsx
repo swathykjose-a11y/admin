@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AdminHeader } from "@/components/layout/admin-header";
 import { OrdersView } from "@/components/orders/orders-view";
 import { ProductsView } from "@/components/products/products-view";
+import { RevenueView } from "@/components/revenue/revenue-view";
 import { CmsView } from "@/components/cms/cms-view";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,6 +16,7 @@ import {
   IndianRupee,
   Layers,
   Sparkles,
+  TrendingUp,
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
@@ -171,6 +173,10 @@ export default function AdminDashboardPage() {
               <ShoppingBag className="w-3.5 h-3.5" />
               Orders & Dropship ({orders.length})
             </TabsTrigger>
+            <TabsTrigger value="revenue" className="text-xs gap-1.5 font-medium">
+              <TrendingUp className="w-3.5 h-3.5" />
+              Revenue & Profit
+            </TabsTrigger>
             <TabsTrigger
               value="products"
               className="text-xs gap-1.5 font-medium"
@@ -190,6 +196,10 @@ export default function AdminDashboardPage() {
               onUpdateOrder={handleUpdateOrder}
               onRefresh={loadData}
             />
+          </TabsContent>
+
+          <TabsContent value="revenue">
+            <RevenueView orders={orders} products={products} />
           </TabsContent>
 
           <TabsContent value="products">

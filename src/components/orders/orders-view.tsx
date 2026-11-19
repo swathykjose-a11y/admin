@@ -123,7 +123,7 @@ export function OrdersView({
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
           {[
             { id: "all", label: "All Orders" },
-            { id: "confirmed", label: "⚠️ Needs Ordering" },
+            { id: "confirmed", label: "Needs Ordering" },
             { id: "ordered_from_supplier", label: "Ordered from Supplier" },
             { id: "shipped", label: "Shipped" },
             { id: "delivered", label: "Delivered" },
