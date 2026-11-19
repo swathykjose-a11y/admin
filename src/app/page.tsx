@@ -101,7 +101,7 @@ export default function AdminDashboardPage() {
                 <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                   Total Revenue
                 </p>
-                <h3 className="text-xl sm:text-2xl font-serif font-bold text-neutral-900 mt-1">
+                <h3 className="text-xl sm:text-2xl font-bold text-neutral-900 mt-1">
                   ₹{totalRevenue.toLocaleString("en-IN")}
                 </h3>
               </div>
@@ -117,7 +117,7 @@ export default function AdminDashboardPage() {
                 <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                   Total Orders
                 </p>
-                <h3 className="text-xl sm:text-2xl font-serif font-bold text-neutral-900 mt-1">
+                <h3 className="text-xl sm:text-2xl font-bold text-neutral-900 mt-1">
                   {orders.length}
                 </h3>
               </div>
@@ -139,7 +139,7 @@ export default function AdminDashboardPage() {
                 <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                   Needs Supplier Order
                 </p>
-                <h3 className="text-xl sm:text-2xl font-serif font-bold text-amber-700 mt-1">
+                <h3 className="text-xl sm:text-2xl font-bold text-amber-700 mt-1">
                   {pendingDropshipOrders}
                 </h3>
               </div>
@@ -155,7 +155,7 @@ export default function AdminDashboardPage() {
                 <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                   Catalog Products
                 </p>
-                <h3 className="text-xl sm:text-2xl font-serif font-bold text-neutral-900 mt-1">
+                <h3 className="text-xl sm:text-2xl font-bold text-neutral-900 mt-1">
                   {products.length}
                 </h3>
               </div>

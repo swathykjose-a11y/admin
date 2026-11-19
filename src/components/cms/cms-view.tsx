@@ -98,7 +98,7 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-serif">
+            <CardTitle className="text-base font-semibold">
               1. Hero Section Banner
             </CardTitle>
             {savedSection === "hero" && (
@@ -183,7 +183,7 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-serif">
+            <CardTitle className="text-base font-semibold">
               2. Featured Section Text
             </CardTitle>
             {savedSection === "featured" && (
@@ -216,7 +216,7 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
               value={featuredHeadline}
               onChange={(e) => setFeaturedHeadline(e.target.value)}
               rows={3}
-              className="text-xs font-serif"
+              className="text-xs"
             />
           </div>
 
@@ -246,7 +246,7 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
       <Card className="md:col-span-2">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-serif">
+            <CardTitle className="text-base font-semibold">
               3. Brand Craftsmanship Story
             </CardTitle>
             {savedSection === "story" && (

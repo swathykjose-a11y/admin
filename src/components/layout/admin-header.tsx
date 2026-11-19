@@ -25,12 +25,12 @@ export function AdminHeader({ isBackendConnected }: AdminHeaderProps) {
   return (
     <header className="border-b bg-card px-6 py-4 flex items-center justify-between shadow-xs">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-md bg-neutral-900 text-white flex items-center justify-center font-serif text-lg font-bold">
+        <div className="w-9 h-9 rounded-md bg-neutral-900 text-white flex items-center justify-center text-lg font-bold">
           D
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-serif text-xl font-semibold tracking-tight text-neutral-900">
+            <h1 className="text-xl font-bold tracking-tight text-neutral-900">
               Dainty Dazzle
             </h1>
             <Badge variant="outline" className="text-[10px] uppercase font-mono tracking-wider">

@@ -176,7 +176,7 @@ export function RevenueView({ orders, products }: RevenueViewProps) {
       {/* Time Range Selector */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2 border-b">
         <div>
-          <h2 className="text-lg font-serif font-semibold text-neutral-900 tracking-tight flex items-center gap-2">
+          <h2 className="text-lg font-bold text-neutral-900 tracking-tight flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-neutral-700" />
             Revenue & Dropship Unit Economics
           </h2>
@@ -226,7 +226,7 @@ export function RevenueView({ orders, products }: RevenueViewProps) {
             </div>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-serif font-bold text-neutral-900">
+            <div className="text-2xl font-bold text-neutral-900">
               ₹{grossRevenue.toLocaleString("en-IN")}
             </div>
             <p className="text-[11px] text-emerald-600 font-medium flex items-center gap-1 mt-1">
@@ -246,7 +246,7 @@ export function RevenueView({ orders, products }: RevenueViewProps) {
             </div>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-serif font-bold text-blue-900">
+            <div className="text-2xl font-bold text-blue-900">
               ₹{netProfit.toLocaleString("en-IN")}
             </div>
             <p className="text-[11px] text-muted-foreground mt-1">
@@ -265,7 +265,7 @@ export function RevenueView({ orders, products }: RevenueViewProps) {
             </div>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-serif font-bold text-neutral-900">
+            <div className="text-2xl font-bold text-neutral-900">
               {marginPercentage.toFixed(1)}%
             </div>
             <p className="text-[11px] text-purple-600 font-medium mt-1">
@@ -284,7 +284,7 @@ export function RevenueView({ orders, products }: RevenueViewProps) {
             </div>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-serif font-bold text-neutral-900">
+            <div className="text-2xl font-bold text-neutral-900">
               ₹{Math.round(aov).toLocaleString("en-IN")}
             </div>
             <p className="text-[11px] text-muted-foreground mt-1">

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Mail, ArrowRight, Loader2, ShieldCheck, AlertCircle } from "lucide-react";
+import { Lock, Mail, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,10 +46,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-neutral-950 flex flex-col justify-center items-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-100 mb-4">
-            <ShieldCheck className="w-6 h-6" />
-          </div>
-          <h1 className="text-2xl font-serif tracking-tight text-neutral-100">
+          <h1 className="text-2xl font-bold tracking-tight text-neutral-100">
             Dainty Dazzle
           </h1>
           <p className="text-xs uppercase tracking-widest text-neutral-400 mt-1">

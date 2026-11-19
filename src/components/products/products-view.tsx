@@ -235,7 +235,7 @@ export function ProductsView({
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-lg font-serif">
+            <DialogTitle className="text-lg font-bold">
               Add New Product
             </DialogTitle>
             <DialogDescription>

@@ -113,7 +113,7 @@ export function OrderDropshipDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between pr-6">
-            <DialogTitle className="text-xl font-serif">
+            <DialogTitle className="text-xl font-bold">
               Fulfill Order #{order.orderNumber}
             </DialogTitle>
             <Badge variant="outline" className="uppercase font-mono text-xs">
