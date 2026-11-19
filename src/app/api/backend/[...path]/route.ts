@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 // Pure server-side environment variables (never exposed via NEXT_PUBLIC)
 const SERVER_BASE_URL =
-  process.env.SERVER_URL || process.env.API_URL || "http://localhost:8787";
+  process.env.SERVER_URL || "http://localhost:8787";
 const ADMIN_API_KEY =
-  process.env.ADMIN_KEY ||
   process.env.ADMIN_API_KEY ||
   "dd_admin_secret_key_change_me";
 
