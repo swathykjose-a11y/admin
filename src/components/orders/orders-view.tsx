@@ -167,7 +167,7 @@ export function OrdersView({
     <div className="space-y-6">
       {/* Table Card */}
       <Card>
-        <CardHeader className="p-4 sm:p-5 border-b">
+        <CardHeader className="p-5 sm:p-6 border-b">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <CardTitle className="text-base font-bold">

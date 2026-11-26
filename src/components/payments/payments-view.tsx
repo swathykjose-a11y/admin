@@ -228,78 +228,78 @@ export function PaymentsView({
       </Card>
 
       {/* ─── 2. Financial & Payment Metrics ─── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <Card className="hover:shadow-xs transition-shadow">
+          <CardContent className="p-5 sm:p-6 flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                 Total Verified Paid
               </p>
-              <h3 className="text-xl sm:text-2xl font-bold text-neutral-900 mt-1">
+              <h3 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
                 ₹{totalCollectedInr.toLocaleString("en-IN")}
               </h3>
-              <p className="text-[11px] text-emerald-600 font-medium mt-0.5">
+              <p className="text-xs text-emerald-600 font-medium mt-1">
                 {paidOrders.length} payments cleared
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
               <IndianRupee className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className={pendingOrders.length > 0 ? "border-amber-300 bg-amber-50/20" : ""}>
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+        <Card className={`hover:shadow-xs transition-shadow ${pendingOrders.length > 0 ? "border-amber-300 bg-amber-50/20" : ""}`}>
+          <CardContent className="p-5 sm:p-6 flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                 Pending Verification
               </p>
-              <h3 className="text-xl sm:text-2xl font-bold text-amber-700 mt-1">
+              <h3 className="text-2xl font-bold tracking-tight text-amber-700 mt-1">
                 ₹{pendingInr.toLocaleString("en-IN")}
               </h3>
-              <p className="text-[11px] text-amber-600 font-medium mt-0.5">
+              <p className="text-xs text-amber-600 font-medium mt-1">
                 {pendingOrders.length} orders awaiting check
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
               <Clock className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+        <Card className="hover:shadow-xs transition-shadow">
+          <CardContent className="p-5 sm:p-6 flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                 UPI Direct Payments
               </p>
-              <h3 className="text-xl sm:text-2xl font-bold text-neutral-900 mt-1">
+              <h3 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
                 {orders.filter((o) => o.paymentMethod === "upi").length}
               </h3>
-              <p className="text-[11px] text-muted-foreground font-medium mt-0.5">
+              <p className="text-xs text-neutral-500 font-medium mt-1">
                 Primary payment method
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <Smartphone className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+        <Card className="hover:shadow-xs transition-shadow">
+          <CardContent className="p-5 sm:p-6 flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                 PhonePe Gateway
               </p>
-              <h3 className="text-xl sm:text-2xl font-bold text-neutral-900 mt-1">
+              <h3 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
                 {orders.filter((o) => o.paymentMethod === "phonepe").length}
               </h3>
-              <p className="text-[11px] text-muted-foreground font-medium mt-0.5">
+              <p className="text-xs text-neutral-500 font-medium mt-1">
                 Auto-reconciler active
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
               <Activity className="w-5 h-5" />
             </div>
           </CardContent>

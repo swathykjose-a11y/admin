@@ -191,7 +191,7 @@ export default function AdminDashboardPage() {
         />
 
         {/* Content Body */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
           {isLoading && orders.length === 0 ? (
             <div className="h-96 flex flex-col items-center justify-center gap-3 text-muted-foreground">
               <Loader2 className="w-8 h-8 animate-spin text-neutral-900" />

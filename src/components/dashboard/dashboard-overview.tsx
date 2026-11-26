@@ -118,18 +118,18 @@ export function DashboardOverview({
     <div className="space-y-6">
       {/* ─── High-Priority Action Strip ─── */}
       {(pendingPayments.length > 0 || needsDropship.length > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {pendingPayments.length > 0 && (
-            <div className="flex items-center justify-between p-3.5 rounded-xl border border-amber-300 bg-amber-50/70 shadow-2xs">
+            <div className="flex items-center justify-between p-4 sm:p-5 rounded-xl border border-amber-300 bg-amber-50/60 shadow-2xs">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
                   <Clock className="w-4 h-4" />
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-neutral-900">
                     {pendingPayments.length} Incoming UPI Payment{pendingPayments.length > 1 ? "s" : ""}
                   </p>
-                  <p className="text-[11px] text-neutral-600">
+                  <p className="text-xs text-neutral-600 mt-0.5">
                     Awaiting verification in your bank account
                   </p>
                 </div>
@@ -137,7 +137,7 @@ export function DashboardOverview({
               <Button
                 size="sm"
                 onClick={() => onNavigateTab("payments")}
-                className="bg-amber-700 hover:bg-amber-800 text-white text-xs h-8 px-3 gap-1 shadow-2xs"
+                className="bg-amber-700 hover:bg-amber-800 text-white text-xs h-8 px-3.5 gap-1 shadow-2xs font-medium"
               >
                 Verify Now
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -146,16 +146,16 @@ export function DashboardOverview({
           )}
 
           {needsDropship.length > 0 && (
-            <div className="flex items-center justify-between p-3.5 rounded-xl border border-blue-300 bg-blue-50/70 shadow-2xs">
+            <div className="flex items-center justify-between p-4 sm:p-5 rounded-xl border border-blue-300 bg-blue-50/60 shadow-2xs">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center shrink-0">
                   <AlertTriangle className="w-4 h-4" />
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-neutral-900">
                     {needsDropship.length} Order{needsDropship.length > 1 ? "s" : ""} Need Dropship Placement
                   </p>
-                  <p className="text-[11px] text-neutral-600">
+                  <p className="text-xs text-neutral-600 mt-0.5">
                     Payment confirmed; place order with supplier
                   </p>
                 </div>
@@ -163,7 +163,7 @@ export function DashboardOverview({
               <Button
                 size="sm"
                 onClick={() => onNavigateTab("orders")}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 px-3 gap-1 shadow-2xs"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 px-3.5 gap-1 shadow-2xs font-medium"
               >
                 Fulfill Orders
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -174,87 +174,87 @@ export function DashboardOverview({
       )}
 
       {/* ─── Top 4 KPI Metric Cards ─── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {/* Total Revenue */}
-        <Card className="hover:shadow-sm transition-shadow">
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+        <Card className="hover:shadow-xs transition-shadow">
+          <CardContent className="p-5 sm:p-6 flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                 Total Revenue
               </p>
-              <h3 className="text-2xl font-bold tracking-tight text-neutral-900">
+              <h3 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
                 ₹{totalRevenue.toLocaleString("en-IN")}
               </h3>
-              <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-medium">
+              <div className="flex items-center gap-1 text-xs text-emerald-600 font-medium mt-1">
                 <ArrowUpRight className="w-3 h-3" />
                 <span>+14.8% this week</span>
               </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
               <IndianRupee className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
         {/* Net Profit & Margin */}
-        <Card className="hover:shadow-sm transition-shadow">
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+        <Card className="hover:shadow-xs transition-shadow">
+          <CardContent className="p-5 sm:p-6 flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                 Net Profit
               </p>
-              <h3 className="text-2xl font-bold tracking-tight text-neutral-900">
+              <h3 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
                 ₹{netProfit.toLocaleString("en-IN")}
               </h3>
-              <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-medium">
-                <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px] px-1.5 py-0">
+              <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium mt-1">
+                <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px] px-1.5 py-0 font-semibold">
                   {profitMarginPercent}% margin
                 </Badge>
-                <span className="text-muted-foreground">after dropship</span>
+                <span className="text-neutral-400">after dropship</span>
               </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
               <TrendingUp className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
         {/* Total Orders */}
-        <Card className="hover:shadow-sm transition-shadow">
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+        <Card className="hover:shadow-xs transition-shadow">
+          <CardContent className="p-5 sm:p-6 flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                 Total Orders
               </p>
-              <h3 className="text-2xl font-bold tracking-tight text-neutral-900">
+              <h3 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
                 {orders.length}
               </h3>
-              <div className="flex items-center gap-1 text-[11px] text-neutral-500 font-medium">
+              <div className="flex items-center gap-1 text-xs text-neutral-500 font-medium mt-1">
                 <span>{delivered.length} delivered • {inTransit.length} in transit</span>
               </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <ShoppingBag className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
         {/* Catalog Products */}
-        <Card className="hover:shadow-sm transition-shadow">
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+        <Card className="hover:shadow-xs transition-shadow">
+          <CardContent className="p-5 sm:p-6 flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                 Jewelry Catalog
               </p>
-              <h3 className="text-2xl font-bold tracking-tight text-neutral-900">
+              <h3 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
                 {products.length} Items
               </h3>
-              <div className="flex items-center gap-1 text-[11px] text-neutral-500 font-medium">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-0.5" />
+              <div className="flex items-center gap-1.5 text-xs text-neutral-500 font-medium mt-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
                 <span>Storefront Live</span>
               </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
               <Sparkles className="w-5 h-5" />
             </div>
           </CardContent>
