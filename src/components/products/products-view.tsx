@@ -22,7 +22,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, Trash2, Tag, Search, Sparkles } from "lucide-react";
+import { Plus, Trash2, Tag, Search, Sparkles, Upload, Loader2, Image as ImageIcon } from "lucide-react";
+import { adminApi } from "@/lib/api";
 
 interface ProductsViewProps {
   products: AdminProduct[];
@@ -49,6 +50,42 @@ export function ProductsView({
   const [imageUrl, setImageUrl] = useState("");
   const [tags, setTags] = useState("earrings, gold, new");
   const [stock, setStock] = useState("20");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please select a valid image file");
+      return;
+    }
+
+    if (file.size > 8 * 1024 * 1024) {
+      alert("Image file must be under 8MB");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64 = reader.result as string;
+          const uploadRes = await adminApi.uploadImage(base64);
+          setImageUrl(uploadRes.url);
+        } catch (err: any) {
+          alert(`Image upload failed: ${err?.message || "Unknown error"}`);
+        } finally {
+          setIsUploadingImage(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setIsUploadingImage(false);
+      alert("Failed to read image file");
+    }
+  };
 
   const filtered = products.filter(
     (p) =>
@@ -300,16 +337,72 @@ export function ProductsView({
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-medium text-neutral-700 block mb-1">
-                Image URL (Unsplash or Cloudflare R2)
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-neutral-700 block">
+                Product Image (Cloudinary or Direct URL)
               </label>
+
+              {/* Upload to Cloudinary trigger */}
+              <div className="flex items-center gap-2">
+                <label className="flex-1 cursor-pointer">
+                  <div className="border border-dashed border-neutral-300 hover:border-neutral-400 bg-neutral-50/60 hover:bg-neutral-50 rounded-md px-3 py-2 flex items-center justify-center gap-2 text-xs text-neutral-600 transition-colors">
+                    {isUploadingImage ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-neutral-500" />
+                        <span>Uploading to Cloudinary...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3.5 h-3.5 text-neutral-500" />
+                        <span>Upload Image File (Cloudinary)</span>
+                      </>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={isUploadingImage}
+                    onChange={handleFileUpload}
+                  />
+                </label>
+              </div>
+
+              {/* Direct URL input fallback */}
               <Input
-                placeholder="https://images.unsplash.com/..."
+                placeholder="Or paste image URL (https://res.cloudinary.com/...)"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
-                className="text-xs h-9"
+                className="text-xs h-9 font-mono text-[11px]"
               />
+
+              {/* Image Preview thumbnail if available */}
+              {imageUrl && (
+                <div className="flex items-center gap-2.5 p-2 bg-neutral-50 rounded border">
+                  <img
+                    src={imageUrl}
+                    alt="Preview"
+                    className="w-10 h-10 object-cover rounded bg-neutral-200 border"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-medium text-neutral-700 truncate">
+                      {imageUrl.includes("cloudinary") ? "Cloudinary CDN Image" : "External Image"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground truncate font-mono">
+                      {imageUrl}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setImageUrl("")}
+                    className="text-xs text-red-500 hover:text-red-700 h-6 px-2"
+                  >
+                    Clear
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div>

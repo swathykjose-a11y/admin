@@ -92,14 +92,10 @@ export function DashboardOverview({
         0,
       );
 
-      // If no orders on past days, add realistic progression based on totals
-      const baseRev = dayRev > 0 ? dayRev : Math.round((totalRevenue / 7) * (0.6 + (i % 3) * 0.4));
-      const baseProfit = Math.round(baseRev * 0.58);
-
       days.push({
         date: dayLabel,
-        revenue: baseRev,
-        profit: baseProfit,
+        revenue: dayRev,
+        profit: Math.max(0, dayRev - dayCost),
       });
     }
 
