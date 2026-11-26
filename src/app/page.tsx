@@ -1,41 +1,62 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AdminHeader } from "@/components/layout/admin-header";
+import { AdminSidebar } from "@/components/layout/admin-sidebar";
+import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
+import { PaymentsView } from "@/components/payments/payments-view";
 import { OrdersView } from "@/components/orders/orders-view";
 import { ProductsView } from "@/components/products/products-view";
 import { RevenueView } from "@/components/revenue/revenue-view";
 import { CmsView } from "@/components/cms/cms-view";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
+import { PaymentVerifyDialog } from "@/components/payments/payment-verify-dialog";
+import { UpiQrDialog } from "@/components/payments/upi-qr-dialog";
 import { adminApi } from "@/lib/api";
-import type { AdminOrder, AdminProduct, OrderStatus } from "@/types/admin";
-import {
-  ShoppingBag,
-  AlertTriangle,
-  IndianRupee,
-  Layers,
-  Sparkles,
-  TrendingUp,
-} from "lucide-react";
+import type {
+  AdminOrder,
+  AdminProduct,
+  OrderStatus,
+  PaymentReceivingOverview,
+} from "@/types/admin";
+import { Loader2 } from "lucide-react";
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
+
+  // Navigation state
+  const [activeTab, setActiveTab] = useState<string>("overview");
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // Data state
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [products, setProducts] = useState<AdminProduct[]>([]);
+  const [paymentOverview, setPaymentOverview] =
+    useState<PaymentReceivingOverview | null>(null);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Global Dialog Modals state
+  const [verifyModalOrder, setVerifyModalOrder] = useState<AdminOrder | null>(
+    null,
+  );
+  const [showQrModal, setShowQrModal] = useState(false);
 
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [ordersRes, productsRes] = await Promise.all([
+      const [ordersRes, productsRes, paymentsRes] = await Promise.all([
         adminApi.getOrders(),
         adminApi.getProducts(),
+        adminApi.getPaymentOverview(),
       ]);
 
       setOrders(ordersRes.orders);
       setProducts(productsRes.products);
-      setIsBackendConnected(ordersRes.isLive || productsRes.isLive);
+      setPaymentOverview(paymentsRes.overview);
+      setIsBackendConnected(
+        ordersRes.isLive || productsRes.isLive || paymentsRes.isLive,
+      );
     } catch (err) {
       console.error("Failed to load admin data", err);
     } finally {
@@ -51,18 +72,45 @@ export default function AdminDashboardPage() {
     orderId: string,
     payload: {
       status: OrderStatus;
+      paymentStatus?: string;
       supplierOrderId?: string;
       supplierOrderUrl?: string;
       supplierCost?: number;
       supplierNotes?: string;
       courierTrackingNumber?: string;
       courierTrackingUrl?: string;
+      notes?: string;
     },
   ) => {
     const res = await adminApi.updateOrderDropship(orderId, payload);
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, ...res.order } : o)),
     );
+  };
+
+  const handleVerifyPayment = async (
+    orderId: string,
+    payload: {
+      paymentStatus: "paid" | "failed" | "refunded";
+      utr?: string;
+      notes?: string;
+      autoConfirmOrder?: boolean;
+    },
+  ) => {
+    const res = await adminApi.verifyPayment(orderId, payload);
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, ...res.order } : o)),
+    );
+
+    // Refresh payment stats in background
+    adminApi.getPaymentOverview().then((res) => {
+      setPaymentOverview(res.overview);
+    });
+  };
+
+  const handleReconcilePayment = async (transactionId: string) => {
+    await adminApi.reconcilePayment(transactionId);
+    await loadData();
   };
 
   const handleAddProduct = async (productData: Partial<AdminProduct>) => {
@@ -82,139 +130,138 @@ export default function AdminDashboardPage() {
     return await adminApi.updateCMS(section, data);
   };
 
-  // Stats calculation
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
-  const pendingDropshipOrders = orders.filter(
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // ignore
+    }
+    router.push("/login");
+    router.refresh();
+  };
+
+  // Counts for sidebar badges
+  const pendingPaymentsCount = orders.filter(
+    (o) => o.paymentStatus === "pending" || !o.paymentStatus,
+  ).length;
+  const needsDropshipCount = orders.filter(
     (o) => o.status === "confirmed",
   ).length;
 
+  const storeUpi = paymentOverview?.storeUpi || {
+    payeeName: "Swathy Jose",
+    vpa: "swathykjose-6@okhdfcbank",
+    phone: "9619408985",
+  };
+
   return (
-    <div className="min-h-screen bg-neutral-50/50 flex flex-col">
-      <AdminHeader isBackendConnected={isBackendConnected} />
+    <div className="min-h-screen bg-neutral-50/40 text-neutral-900 flex">
+      {/* ─── Modern Left Sidebar Navigation ─── */}
+      <AdminSidebar
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        pendingPaymentsCount={pendingPaymentsCount}
+        needsDropshipCount={needsDropshipCount}
+        productsCount={products.length}
+        isBackendConnected={isBackendConnected}
+        mobileOpen={mobileSidebarOpen}
+        onCloseMobile={() => setMobileSidebarOpen(false)}
+        onLogout={handleLogout}
+      />
 
-      <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6">
-        {/* Metric Overview Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                  Total Revenue
-                </p>
-                <h3 className="text-xl sm:text-2xl font-bold text-neutral-900 mt-1">
-                  ₹{totalRevenue.toLocaleString("en-IN")}
-                </h3>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                <IndianRupee className="w-5 h-5" />
-              </div>
-            </CardContent>
-          </Card>
+      {/* ─── Main Content Canvas (offset by sidebar width on lg+) ─── */}
+      <div className="flex-1 flex flex-col min-w-0 lg:pl-64">
+        {/* Sticky App Header */}
+        <AdminHeader
+          isBackendConnected={isBackendConnected}
+          activeTab={activeTab}
+          onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
+          pendingPaymentsCount={pendingPaymentsCount}
+          onNavigateTab={setActiveTab}
+          onRefresh={loadData}
+          onLogout={handleLogout}
+          onOpenAddProduct={
+            activeTab === "products"
+              ? () => {
+                  const addBtn = document.getElementById("admin-add-product-btn");
+                  if (addBtn) addBtn.click();
+                }
+              : undefined
+          }
+        />
 
-          <Card>
-            <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                  Total Orders
-                </p>
-                <h3 className="text-xl sm:text-2xl font-bold text-neutral-900 mt-1">
-                  {orders.length}
-                </h3>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                <ShoppingBag className="w-5 h-5" />
-              </div>
-            </CardContent>
-          </Card>
+        {/* Content Body */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+          {isLoading && orders.length === 0 ? (
+            <div className="h-96 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+              <Loader2 className="w-8 h-8 animate-spin text-neutral-900" />
+              <p className="text-xs font-medium">Loading Dainty Dazzle Dashboard...</p>
+            </div>
+          ) : (
+            <>
+              {activeTab === "overview" && (
+                <DashboardOverview
+                  orders={orders}
+                  products={products}
+                  paymentOverview={paymentOverview}
+                  onNavigateTab={setActiveTab}
+                  onOpenVerifyModal={(order) => setVerifyModalOrder(order)}
+                  onOpenQrModal={() => setShowQrModal(true)}
+                />
+              )}
 
-          <Card
-            className={
-              pendingDropshipOrders > 0
-                ? "border-amber-300 bg-amber-50/30"
-                : ""
-            }
-          >
-            <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                  Needs Supplier Order
-                </p>
-                <h3 className="text-xl sm:text-2xl font-bold text-amber-700 mt-1">
-                  {pendingDropshipOrders}
-                </h3>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
-                <AlertTriangle className="w-5 h-5" />
-              </div>
-            </CardContent>
-          </Card>
+              {activeTab === "payments" && (
+                <PaymentsView
+                  orders={orders}
+                  overview={paymentOverview}
+                  onVerifyPayment={handleVerifyPayment}
+                  onReconcile={handleReconcilePayment}
+                  onRefresh={loadData}
+                />
+              )}
 
-          <Card>
-            <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                  Catalog Products
-                </p>
-                <h3 className="text-xl sm:text-2xl font-bold text-neutral-900 mt-1">
-                  {products.length}
-                </h3>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-neutral-100 text-neutral-700 flex items-center justify-center shrink-0">
-                <Layers className="w-5 h-5" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              {activeTab === "orders" && (
+                <OrdersView
+                  orders={orders}
+                  onUpdateOrder={handleUpdateOrder}
+                  onVerifyPayment={handleVerifyPayment}
+                  onRefresh={loadData}
+                />
+              )}
 
-        {/* Main Tabs Navigation */}
-        <Tabs defaultValue="orders" className="space-y-4">
-          <TabsList className="bg-neutral-100/80 p-1 border">
-            <TabsTrigger value="orders" className="text-xs gap-1.5 font-medium">
-              <ShoppingBag className="w-3.5 h-3.5" />
-              Orders & Dropship ({orders.length})
-            </TabsTrigger>
-            <TabsTrigger value="revenue" className="text-xs gap-1.5 font-medium">
-              <TrendingUp className="w-3.5 h-3.5" />
-              Revenue & Profit
-            </TabsTrigger>
-            <TabsTrigger
-              value="products"
-              className="text-xs gap-1.5 font-medium"
-            >
-              <Layers className="w-3.5 h-3.5" />
-              Products Catalog ({products.length})
-            </TabsTrigger>
-            <TabsTrigger value="cms" className="text-xs gap-1.5 font-medium">
-              <Sparkles className="w-3.5 h-3.5" />
-              Homepage Banners (CMS)
-            </TabsTrigger>
-          </TabsList>
+              {activeTab === "products" && (
+                <ProductsView
+                  products={products}
+                  onAddProduct={handleAddProduct}
+                  onDeleteProduct={handleDeleteProduct}
+                  onRefresh={loadData}
+                />
+              )}
 
-          <TabsContent value="orders">
-            <OrdersView
-              orders={orders}
-              onUpdateOrder={handleUpdateOrder}
-              onRefresh={loadData}
-            />
-          </TabsContent>
+              {activeTab === "revenue" && <RevenueView orders={orders} />}
 
-          <TabsContent value="revenue">
-            <RevenueView orders={orders} products={products} />
-          </TabsContent>
+              {activeTab === "cms" && <CmsView onSaveCms={handleSaveCms} />}
+            </>
+          )}
+        </main>
+      </div>
 
-          <TabsContent value="products">
-            <ProductsView
-              products={products}
-              onAddProduct={handleAddProduct}
-              onDeleteProduct={handleDeleteProduct}
-            />
-          </TabsContent>
+      {/* Global Payment Verify Dialog */}
+      <PaymentVerifyDialog
+        order={verifyModalOrder}
+        isOpen={!!verifyModalOrder}
+        onClose={() => setVerifyModalOrder(null)}
+        onVerify={handleVerifyPayment}
+      />
 
-          <TabsContent value="cms">
-            <CmsView onSaveCms={handleSaveCms} />
-          </TabsContent>
-        </Tabs>
-      </main>
+      {/* Global QR Code Dialog */}
+      <UpiQrDialog
+        isOpen={showQrModal}
+        onClose={() => setShowQrModal(false)}
+        vpa={storeUpi.vpa}
+        payeeName={storeUpi.payeeName}
+        phone={storeUpi.phone}
+      />
     </div>
   );
 }
