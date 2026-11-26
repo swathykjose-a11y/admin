@@ -13,7 +13,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { OrderDropshipDialog } from "./order-dropship-dialog";
+import { PaymentVerifyDialog } from "../payments/payment-verify-dialog";
 import {
   Package,
   Search,
@@ -22,6 +24,12 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
+  IndianRupee,
+  RefreshCw,
+  TrendingUp,
+  MapPin,
+  ShieldCheck,
+  PackageCheck,
 } from "lucide-react";
 
 interface OrdersViewProps {
@@ -30,12 +38,23 @@ interface OrdersViewProps {
     orderId: string,
     data: {
       status: OrderStatus;
+      paymentStatus?: string;
       supplierOrderId?: string;
       supplierOrderUrl?: string;
       supplierCost?: number;
       supplierNotes?: string;
       courierTrackingNumber?: string;
       courierTrackingUrl?: string;
+      notes?: string;
+    },
+  ) => Promise<void>;
+  onVerifyPayment?: (
+    orderId: string,
+    payload: {
+      paymentStatus: "paid" | "failed" | "refunded";
+      utr?: string;
+      notes?: string;
+      autoConfirmOrder?: boolean;
     },
   ) => Promise<void>;
   onRefresh: () => void;
@@ -44,15 +63,29 @@ interface OrdersViewProps {
 export function OrdersView({
   orders,
   onUpdateOrder,
+  onVerifyPayment,
   onRefresh,
 }: OrdersViewProps) {
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
+  const [selectedOrderForPayment, setSelectedOrderForPayment] =
+    useState<AdminOrder | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [paymentFilter, setPaymentFilter] = useState<string>("all");
 
   const filteredOrders = orders.filter((o) => {
-    const matchesStatus =
-      statusFilter === "all" || o.status === statusFilter;
+    let matchesStatus = true;
+    if (statusFilter !== "all") {
+      matchesStatus = o.status === statusFilter;
+    }
+
+    let matchesPayment = true;
+    if (paymentFilter === "pending") {
+      matchesPayment = o.paymentStatus === "pending" || !o.paymentStatus;
+    } else if (paymentFilter === "paid") {
+      matchesPayment = o.paymentStatus === "paid";
+    }
+
     const query = searchQuery.toLowerCase().trim();
     const matchesQuery =
       !query ||
@@ -60,13 +93,21 @@ export function OrdersView({
       o.customerFirstName.toLowerCase().includes(query) ||
       o.customerLastName.toLowerCase().includes(query) ||
       o.customerPhone.includes(query) ||
-      o.city.toLowerCase().includes(query);
+      o.city.toLowerCase().includes(query) ||
+      (o.notes && o.notes.toLowerCase().includes(query));
 
-    return matchesStatus && matchesQuery;
+    return matchesStatus && matchesPayment && matchesQuery;
   });
 
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
+      case "pending":
+        return (
+          <Badge variant="outline" className="text-amber-700 border-amber-300 bg-amber-50 gap-1 text-[11px]">
+            <Clock className="w-3 h-3" />
+            Pending
+          </Badge>
+        );
       case "confirmed":
         return (
           <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-300 gap-1 text-[11px]">
@@ -78,7 +119,7 @@ export function OrdersView({
         return (
           <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-300 gap-1 text-[11px]">
             <Clock className="w-3 h-3" />
-            Ordered at Supplier
+            Ordered from Supplier
           </Badge>
         );
       case "shipped":
@@ -104,181 +145,317 @@ export function OrdersView({
     }
   };
 
+  const getPaymentBadge = (order: AdminOrder) => {
+    const isPaid = order.paymentStatus === "paid";
+    return isPaid ? (
+      <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-emerald-200 text-[10px] gap-1 font-mono">
+        <CheckCircle2 className="w-2.5 h-2.5" />
+        {order.paymentMethod?.toUpperCase() || "UPI"} PAID
+      </Badge>
+    ) : (
+      <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-300 text-[10px] gap-1 font-mono">
+        <Clock className="w-2.5 h-2.5" />
+        {order.paymentMethod?.toUpperCase() || "UPI"} PENDING
+      </Badge>
+    );
+  };
+
+  const needsDropshipCount = orders.filter((o) => o.status === "confirmed").length;
+  const pendingPaymentCount = orders.filter((o) => o.paymentStatus === "pending").length;
+
   return (
-    <div className="space-y-4">
-      {/* Filters Bar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-        <div className="flex items-center gap-2 max-w-sm flex-1">
-          <div className="relative w-full">
-            <Search className="w-4 h-4 absolute left-2.5 top-2.5 text-muted-foreground" />
-            <Input
-              placeholder="Search by order #, customer, phone, city..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 text-xs h-9"
-            />
-          </div>
-        </div>
+    <div className="space-y-6">
+      {/* Table Card */}
+      <Card>
+        <CardHeader className="p-4 sm:p-5 border-b">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <CardTitle className="text-base font-bold">
+                Orders & Dropship Fulfillment
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Manage incoming orders, supplier procurement, and tracking numbers
+              </CardDescription>
+            </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {[
-            { id: "all", label: "All Orders" },
-            { id: "confirmed", label: "Needs Ordering" },
-            { id: "ordered_from_supplier", label: "Ordered from Supplier" },
-            { id: "shipped", label: "Shipped" },
-            { id: "delivered", label: "Delivered" },
-          ].map((tab) => (
             <Button
-              key={tab.id}
-              variant={statusFilter === tab.id ? "default" : "outline"}
+              variant="outline"
               size="sm"
-              onClick={() => setStatusFilter(tab.id)}
-              className="text-xs h-8 shrink-0"
+              onClick={onRefresh}
+              className="text-xs gap-1.5 h-8 shrink-0 self-start sm:self-auto"
             >
-              {tab.label}
+              <RefreshCw className="w-3.5 h-3.5" />
+              Refresh
             </Button>
-          ))}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onRefresh}
-            className="text-xs h-8 ml-auto"
-          >
-            Refresh
-          </Button>
-        </div>
-      </div>
+          </div>
 
-      {/* Orders Table */}
-      <div className="border rounded-lg bg-card overflow-hidden">
-        <Table>
-          <TableHeader className="bg-muted/50">
-            <TableRow>
-              <TableHead className="w-[120px] text-xs">Order #</TableHead>
-              <TableHead className="text-xs">Customer</TableHead>
-              <TableHead className="text-xs">Items</TableHead>
-              <TableHead className="text-xs">Total / Payment</TableHead>
-              <TableHead className="text-xs">Dropship Status</TableHead>
-              <TableHead className="text-xs">Supplier Info</TableHead>
-              <TableHead className="text-right text-xs">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredOrders.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="text-center py-12 text-muted-foreground text-xs"
+          {/* Search & Filter Toolbar */}
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-3">
+            {/* Search Input */}
+            <div className="relative flex-1 max-w-sm">
+              <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+              <Input
+                placeholder="Search order #, customer, phone, city..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 text-xs h-8"
+              />
+            </div>
+
+            {/* Filter Buttons */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
+              {[
+                { key: "all", label: `All (${orders.length})` },
+                {
+                  key: "confirmed",
+                  label: `Needs Supplier (${needsDropshipCount})`,
+                  highlight: needsDropshipCount > 0,
+                },
+                { key: "ordered_from_supplier", label: "Ordered" },
+                { key: "shipped", label: "Shipped" },
+                { key: "delivered", label: "Delivered" },
+              ].map((f) => (
+                <Button
+                  key={f.key}
+                  variant={statusFilter === f.key ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStatusFilter(f.key)}
+                  className={`text-xs h-8 px-2.5 whitespace-nowrap ${
+                    statusFilter === f.key
+                      ? "bg-neutral-900 text-white"
+                      : f.highlight
+                        ? "border-amber-300 text-amber-800 bg-amber-50/60"
+                        : "text-neutral-600 hover:text-neutral-900"
+                  }`}
                 >
-                  <Package className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                  No orders match your filter criteria.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredOrders.map((order) => (
-                <TableRow key={order.id} className="text-xs">
-                  <TableCell className="font-mono font-medium">
-                    #{order.orderNumber}
-                    <div className="text-[10px] text-muted-foreground font-sans">
-                      {new Date(order.createdAt).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </div>
-                  </TableCell>
+                  {f.label}
+                </Button>
+              ))}
 
-                  <TableCell>
-                    <div className="font-medium text-neutral-900">
-                      {order.customerFirstName} {order.customerLastName}
-                    </div>
-                    <div className="text-muted-foreground text-[11px]">
-                      {order.city}, {order.state} • {order.customerPhone}
-                    </div>
-                  </TableCell>
+              {/* Payment filter toggle */}
+              <div className="h-4 w-px bg-neutral-200 mx-1" />
 
-                  <TableCell>
-                    <div className="max-w-[200px] truncate text-neutral-700">
-                      {order.items && order.items.length > 0 ? (
-                        <>
-                          {order.items[0].quantity}x {order.items[0].productTitle}
-                          {order.items.length > 1 && (
-                            <span className="text-muted-foreground">
-                              {" "}
-                              +{order.items.length - 1} more
+              <Button
+                variant={paymentFilter === "pending" ? "default" : "outline"}
+                size="sm"
+                onClick={() =>
+                  setPaymentFilter(paymentFilter === "pending" ? "all" : "pending")
+                }
+                className={`text-xs h-8 px-2.5 whitespace-nowrap ${
+                  paymentFilter === "pending"
+                    ? "bg-amber-700 text-white"
+                    : pendingPaymentCount > 0
+                      ? "border-amber-300 text-amber-800 bg-amber-50"
+                      : "text-neutral-600"
+                }`}
+              >
+                Pending UPI ({pendingPaymentCount})
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-neutral-50/60">
+                <TableRow>
+                  <TableHead className="text-xs font-semibold">Order / Date</TableHead>
+                  <TableHead className="text-xs font-semibold">Customer & Delivery</TableHead>
+                  <TableHead className="text-xs font-semibold">Ordered Items</TableHead>
+                  <TableHead className="text-xs font-semibold">Retail & Payment</TableHead>
+                  <TableHead className="text-xs font-semibold">Fulfillment</TableHead>
+                  <TableHead className="text-xs font-semibold">Supplier / Profit</TableHead>
+                  <TableHead className="text-xs font-semibold text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredOrders.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="h-40 text-center text-muted-foreground text-xs"
+                    >
+                      <Package className="w-8 h-8 mx-auto text-neutral-300 mb-2" />
+                      <p className="font-medium text-neutral-600">No orders match your filter criteria.</p>
+                      {(statusFilter !== "all" || searchQuery || paymentFilter !== "all") && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setStatusFilter("all");
+                            setPaymentFilter("all");
+                            setSearchQuery("");
+                          }}
+                          className="mt-2 text-xs text-neutral-600 hover:text-neutral-900"
+                        >
+                          Clear Filters
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredOrders.map((order) => {
+                    const isPaymentPending = order.paymentStatus === "pending";
+                    const supplierCostNum = parseFloat(order.supplierCost as any) || 0;
+                    const profitNum = order.total - supplierCostNum;
+
+                    return (
+                      <TableRow key={order.id} className="hover:bg-neutral-50/50">
+                        {/* Order & Date */}
+                        <TableCell>
+                          <div className="font-mono text-xs font-bold text-neutral-900">
+                            {order.orderNumber}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground mt-0.5">
+                            {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </div>
+                        </TableCell>
+
+                        {/* Customer */}
+                        <TableCell>
+                          <div className="text-xs font-semibold text-neutral-900">
+                            {order.customerFirstName} {order.customerLastName}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground">
+                            {order.customerPhone}
+                          </div>
+                          <div className="text-[11px] text-neutral-500 flex items-center gap-1 mt-0.5">
+                            <MapPin className="w-2.5 h-2.5 shrink-0" />
+                            <span className="truncate max-w-[140px]">
+                              {order.city}, {order.state}
+                            </span>
+                          </div>
+                        </TableCell>
+
+                        {/* Items */}
+                        <TableCell>
+                          <div className="space-y-1 max-w-[200px]">
+                            {order.items?.slice(0, 2).map((item) => (
+                              <div key={item.id} className="flex items-center gap-1.5 text-xs truncate">
+                                {item.imageUrl && (
+                                  <img
+                                    src={item.imageUrl}
+                                    alt={item.productTitle}
+                                    className="w-5 h-5 rounded object-cover shrink-0"
+                                  />
+                                )}
+                                <span className="font-medium text-neutral-800 truncate">
+                                  {item.productTitle}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground shrink-0 font-mono">
+                                  ×{item.quantity}
+                                </span>
+                              </div>
+                            ))}
+                            {(order.items?.length || 0) > 2 && (
+                              <span className="text-[10px] text-muted-foreground block">
+                                +{(order.items?.length || 0) - 2} more item(s)
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+
+                        {/* Retail & Payment */}
+                        <TableCell>
+                          <div className="text-xs font-bold text-neutral-900">
+                            ₹{order.total.toLocaleString("en-IN")}
+                          </div>
+                          <div className="mt-1">
+                            {getPaymentBadge(order)}
+                          </div>
+                        </TableCell>
+
+                        {/* Fulfillment Status */}
+                        <TableCell>
+                          {getStatusBadge(order.status)}
+                        </TableCell>
+
+                        {/* Supplier & Profit */}
+                        <TableCell>
+                          {supplierCostNum > 0 ? (
+                            <div className="space-y-0.5 text-xs">
+                              <span className="text-[11px] text-muted-foreground block">
+                                Cost: ₹{supplierCostNum}
+                              </span>
+                              <span className="text-emerald-700 font-semibold font-mono text-xs flex items-center gap-0.5">
+                                <TrendingUp className="w-3 h-3" />
+                                +₹{profitNum.toFixed(0)}
+                              </span>
+                              {order.courierTrackingNumber && (
+                                <a
+                                  href={order.courierTrackingUrl || "#"}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
+                                >
+                                  <Truck className="w-2.5 h-2.5" />
+                                  {order.courierTrackingNumber}
+                                </a>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">
+                              Not ordered yet
                             </span>
                           )}
-                        </>
-                      ) : (
-                        "1 item"
-                      )}
-                    </div>
-                  </TableCell>
+                        </TableCell>
 
-                  <TableCell>
-                    <div className="font-mono font-semibold">
-                      ₹{order.total.toFixed(0)}
-                    </div>
-                    <div className="text-[10px] uppercase font-mono text-muted-foreground">
-                      {order.paymentMethod} • {order.paymentStatus}
-                    </div>
-                  </TableCell>
+                        {/* Actions */}
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {isPaymentPending && onVerifyPayment && (
+                              <Button
+                                size="sm"
+                                onClick={() => setSelectedOrderForPayment(order)}
+                                className="text-[11px] h-7 bg-emerald-600 hover:bg-emerald-700 text-white px-2 gap-1 shadow-2xs"
+                              >
+                                <ShieldCheck className="w-3 h-3" />
+                                Verify
+                              </Button>
+                            )}
 
-                  <TableCell>{getStatusBadge(order.status)}</TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedOrder(order)}
+                              className="text-[11px] h-7 px-2.5 text-neutral-700 hover:text-neutral-900 gap-1 bg-white"
+                            >
+                              <PackageCheck className="w-3 h-3" />
+                              Fulfill
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
 
-                  <TableCell>
-                    {order.supplierOrderId ? (
-                      <div className="flex items-center gap-1.5 font-mono text-[11px]">
-                        <span>{order.supplierOrderId}</span>
-                        {order.supplierOrderUrl && (
-                          <a
-                            href={order.supplierOrderUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground text-[11px] italic">
-                        Not ordered yet
-                      </span>
-                    )}
+      {/* Dropship Fulfillment Dialog */}
+      <OrderDropshipDialog
+        order={selectedOrder}
+        isOpen={!!selectedOrder}
+        onClose={() => setSelectedOrder(null)}
+        onSave={onUpdateOrder}
+      />
 
-                    {order.courierTrackingNumber && (
-                      <div className="text-[10px] text-purple-700 font-mono mt-0.5">
-                        Track: {order.courierTrackingNumber}
-                      </div>
-                    )}
-                  </TableCell>
-
-                  <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setSelectedOrder(order)}
-                      className="h-8 text-xs font-medium"
-                    >
-                      Fulfill Order
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Dropship Details Modal */}
-      {selectedOrder && (
-        <OrderDropshipDialog
-          order={selectedOrder}
-          isOpen={!!selectedOrder}
-          onClose={() => setSelectedOrder(null)}
-          onSave={onUpdateOrder}
+      {/* Payment Verify Dialog */}
+      {onVerifyPayment && (
+        <PaymentVerifyDialog
+          order={selectedOrderForPayment}
+          isOpen={!!selectedOrderForPayment}
+          onClose={() => setSelectedOrderForPayment(null)}
+          onVerify={onVerifyPayment}
         />
       )}
     </div>
