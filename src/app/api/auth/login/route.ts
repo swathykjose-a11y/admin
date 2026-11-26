@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const SERVER_BASE_URL =
-  process.env.SERVER_URL || "http://localhost:8787";
+  process.env.SERVER_URL || "https://api.daintydazzle.store";
 
 export async function POST(request: NextRequest) {
   try {

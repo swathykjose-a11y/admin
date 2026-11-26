@@ -4,7 +4,10 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("admin_token")?.value;
 
-  const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/api/auth");
+  const isAuthRoute =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/backend");
   const isStaticAsset =
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
