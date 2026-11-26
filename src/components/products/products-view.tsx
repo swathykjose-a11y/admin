@@ -28,6 +28,7 @@ interface ProductsViewProps {
   products: AdminProduct[];
   onAddProduct: (product: Partial<AdminProduct>) => Promise<void>;
   onDeleteProduct: (id: string) => Promise<void>;
+  onRefresh?: () => void;
 }
 
 export function ProductsView({
@@ -127,8 +128,9 @@ export function ProductsView({
         </div>
 
         <Button
+          id="admin-add-product-btn"
           onClick={() => setIsAddOpen(true)}
-          className="gap-1.5 text-xs h-9"
+          className="gap-1.5 text-xs h-9 bg-neutral-900 text-white"
         >
           <Plus className="w-3.5 h-3.5" />
           Add Product
