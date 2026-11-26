@@ -41,10 +41,10 @@ import {
 
 interface RevenueViewProps {
   orders: AdminOrder[];
-  products: AdminProduct[];
+  products?: AdminProduct[];
 }
 
-export function RevenueView({ orders, products }: RevenueViewProps) {
+export function RevenueView({ orders, products = [] }: RevenueViewProps) {
   const [timeRange, setTimeRange] = useState<"7d" | "30d" | "all">("30d");
 
   // Filter orders by time range
