@@ -31,6 +31,9 @@ export type OrderStatus =
   | "delivered"
   | "cancelled";
 
+export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
+export type PaymentMethod = "upi" | "phonepe" | "cod" | "online";
+
 export interface AdminOrder {
   id: string;
   orderNumber: string;
@@ -48,8 +51,8 @@ export interface AdminOrder {
   shippingFee: number;
   total: number;
   currency: string;
-  paymentMethod: string;
-  paymentStatus: string;
+  paymentMethod: PaymentMethod | string;
+  paymentStatus: PaymentStatus | string;
   status: OrderStatus;
   supplierOrderId?: string;
   supplierOrderUrl?: string;
@@ -57,9 +60,68 @@ export interface AdminOrder {
   supplierNotes?: string;
   courierTrackingNumber?: string;
   courierTrackingUrl?: string;
+  notes?: string;
   items?: AdminOrderItem[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface StoreUpiConfig {
+  payeeName: string;
+  vpa: string;
+  phone: string;
+  sampleUri?: string;
+}
+
+export interface PaymentTransaction {
+  id: string;
+  orderId: string;
+  merchantTransactionId: string;
+  provider: string;
+  amountInPaise: string;
+  currency: string;
+  status: "PENDING" | "SUCCESS" | "FAILED";
+  providerReferenceId?: string | null;
+  providerResponseCode?: string | null;
+  pollCount?: number;
+  lastPolledAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PollingAuditLog {
+  id: string;
+  jobName: string;
+  workerId: string;
+  recordsChecked: number;
+  recordsUpdated: number;
+  status: "SUCCESS" | "FAILED";
+  durationMs: number;
+  createdAt: string;
+}
+
+export interface PaymentReceivingOverview {
+  storeUpi: StoreUpiConfig;
+  stats: {
+    totalPaidInr: number;
+    pendingVerificationInr: number;
+    pendingVerificationCount: number;
+    paymentMethodCounts: {
+      upi: number;
+      phonepe: number;
+      cod: number;
+      online: number;
+    };
+    paymentStatusCounts: {
+      pending: number;
+      paid: number;
+      failed: number;
+      refunded: number;
+    };
+    totalTransactionsRecorded: number;
+  };
+  recentTransactions: PaymentTransaction[];
+  recentAuditLogs: PollingAuditLog[];
 }
 
 export interface ProductVariantInput {
