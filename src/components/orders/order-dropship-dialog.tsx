@@ -30,12 +30,14 @@ interface OrderDropshipDialogProps {
     orderId: string,
     data: {
       status: OrderStatus;
+      paymentStatus?: string;
       supplierOrderId?: string;
       supplierOrderUrl?: string;
       supplierCost?: number;
       supplierNotes?: string;
       courierTrackingNumber?: string;
       courierTrackingUrl?: string;
+      notes?: string;
     },
   ) => Promise<void>;
 }
@@ -51,6 +53,8 @@ export function OrderDropshipDialog({
 
   // Form State
   const [status, setStatus] = useState<OrderStatus>(order?.status || "confirmed");
+  const [paymentStatus, setPaymentStatus] = useState<string>(order?.paymentStatus || "pending");
+  const [notes, setNotes] = useState(order?.notes || "");
   const [supplierOrderId, setSupplierOrderId] = useState(
     order?.supplierOrderId || "",
   );
@@ -95,12 +99,14 @@ export function OrderDropshipDialog({
     try {
       await onSave(order.id, {
         status,
+        paymentStatus,
         supplierOrderId: supplierOrderId.trim() || undefined,
         supplierOrderUrl: supplierOrderUrl.trim() || undefined,
         supplierCost: costNum > 0 ? costNum : undefined,
         supplierNotes: supplierNotes.trim() || undefined,
         courierTrackingNumber: courierTrackingNumber.trim() || undefined,
         courierTrackingUrl: courierTrackingUrl.trim() || undefined,
+        notes: notes.trim() || undefined,
       });
       onClose();
     } finally {
@@ -213,13 +219,30 @@ export function OrderDropshipDialog({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-medium text-neutral-700 block mb-1">
+                  Payment Verification Status
+                </label>
+                <select
+                  value={paymentStatus}
+                  onChange={(e) => setPaymentStatus(e.target.value)}
+                  className="w-full h-9 rounded-md border border-input bg-background px-3 text-xs focus:ring-1 focus:ring-ring font-medium"
+                >
+                  <option value="paid">Paid & Verified</option>
+                  <option value="pending">Pending Verification</option>
+                  <option value="failed">Failed / Unpaid</option>
+                  <option value="refunded">Refunded</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-neutral-700 block mb-1">
                   Fulfillment Status
                 </label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value as OrderStatus)}
-                  className="w-full h-9 rounded-md border border-input bg-background px-3 text-xs focus:ring-1 focus:ring-ring"
+                  className="w-full h-9 rounded-md border border-input bg-background px-3 text-xs focus:ring-1 focus:ring-ring font-medium"
                 >
+                  <option value="pending">Pending Confirmation</option>
                   <option value="confirmed">Confirmed (Needs Ordering)</option>
                   <option value="ordered_from_supplier">
                     Ordered from Supplier
@@ -228,6 +251,18 @@ export function OrderDropshipDialog({
                   <option value="delivered">Delivered</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-xs font-medium text-neutral-700 block mb-1">
+                  Payment Reference / UTR / Order Notes
+                </label>
+                <Input
+                  placeholder="e.g. [UPI Verified - UTR: 432198765432] or customer note"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="h-9 text-xs font-mono"
+                />
               </div>
 
               <div>
