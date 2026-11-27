@@ -94,6 +94,49 @@ export function ProductsView({
   const [stock, setStock] = useState("25");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const PRODUCT_DRAFT_KEY = "dd_admin_product_draft_v1";
+
+  // Restore Add Product draft across page refreshes
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(PRODUCT_DRAFT_KEY);
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (d.title) setTitle(d.title);
+      if (d.handle) setHandle(d.handle);
+      if (d.selectedCategory) setSelectedCategory(d.selectedCategory);
+      if (d.minPrice) setMinPrice(d.minPrice);
+      if (d.compareAtPrice) setCompareAtPrice(d.compareAtPrice);
+      if (d.description) setDescription(d.description);
+      if (d.imageUrl) setImageUrl(d.imageUrl);
+      if (d.tags) setTags(d.tags);
+      if (d.stock) setStock(d.stock);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // Persist Add Product draft as admin types
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        PRODUCT_DRAFT_KEY,
+        JSON.stringify({
+          title,
+          handle,
+          selectedCategory,
+          minPrice,
+          compareAtPrice,
+          description,
+          imageUrl,
+          tags,
+          stock,
+        }),
+      );
+    } catch {
+      // ignore
+    }
+  }, [title, handle, selectedCategory, minPrice, compareAtPrice, description, imageUrl, tags, stock]);
 
   // Fetch collections from server on mount to seed categories
   useEffect(() => {
@@ -236,7 +279,13 @@ export function ProductsView({
       setDescription("");
       setImageUrl("");
       setTags("gold, new");
+      setStock("25");
       setUploadError(null);
+      try {
+        localStorage.removeItem(PRODUCT_DRAFT_KEY);
+      } catch {
+        // ignore
+      }
     } finally {
       setIsSubmitting(false);
     }
