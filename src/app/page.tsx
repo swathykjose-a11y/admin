@@ -147,11 +147,6 @@ export default function AdminDashboardPage() {
     });
   };
 
-  const handleReconcilePayment = async (transactionId: string) => {
-    await adminApi.reconcilePayment(transactionId);
-    await loadData();
-  };
-
   const handleAddProduct = async (productData: Partial<AdminProduct>) => {
     const created = await adminApi.upsertProduct(productData);
     setProducts((prev) => [created, ...prev]);
@@ -262,7 +257,6 @@ export default function AdminDashboardPage() {
                   orders={orders}
                   overview={paymentOverview}
                   onVerifyPayment={handleVerifyPayment}
-                  onReconcile={handleReconcilePayment}
                   onRefresh={loadData}
                 />
               )}

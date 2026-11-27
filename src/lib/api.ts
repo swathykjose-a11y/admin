@@ -30,7 +30,6 @@ export const EMPTY_PAYMENT_OVERVIEW: PaymentReceivingOverview = {
     pendingVerificationCount: 0,
     paymentMethodCounts: {
       upi: 0,
-      phonepe: 0,
       cod: 0,
       online: 0,
     },
@@ -168,14 +167,6 @@ export const adminApi = {
     }
 
     throw new Error("Failed to verify payment on server");
-  },
-
-  async reconcilePayment(transactionId: string): Promise<any> {
-    const res = await adminFetch<any>(
-      `/api/admin/payments/reconcile/${transactionId}`,
-      { method: "POST" },
-    );
-    return res.data || { success: true, message: "Reconciled with gateway" };
   },
 
   // Products

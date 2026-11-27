@@ -32,7 +32,7 @@ export type OrderStatus =
   | "cancelled";
 
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
-export type PaymentMethod = "upi" | "phonepe" | "cod" | "online";
+export type PaymentMethod = "upi" | "cod" | "online";
 
 export interface AdminOrder {
   id: string;
@@ -108,7 +108,6 @@ export interface PaymentReceivingOverview {
     pendingVerificationCount: number;
     paymentMethodCounts: {
       upi: number;
-      phonepe: number;
       cod: number;
       online: number;
     };

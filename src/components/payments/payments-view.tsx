@@ -54,7 +54,6 @@ interface PaymentsViewProps {
       autoConfirmOrder?: boolean;
     },
   ) => Promise<void>;
-  onReconcile: (transactionId: string) => Promise<void>;
   onRefresh: () => void;
   onNavigateToOrder?: (orderId: string) => void;
 }
@@ -63,7 +62,6 @@ export function PaymentsView({
   orders,
   overview,
   onVerifyPayment,
-  onReconcile,
   onRefresh,
   onNavigateToOrder,
 }: PaymentsViewProps) {
@@ -73,8 +71,6 @@ export function PaymentsView({
   const [copiedVpa, setCopiedVpa] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [isReconciling, setIsReconciling] = useState(false);
-  const [reconcileMessage, setReconcileMessage] = useState<string | null>(null);
 
   const storeUpi = overview?.storeUpi || {
     payeeName: "Swathy Jose",
@@ -109,29 +105,12 @@ export function PaymentsView({
     if (statusFilter === "pending") matchesStatus = o.paymentStatus === "pending";
     else if (statusFilter === "paid") matchesStatus = o.paymentStatus === "paid";
     else if (statusFilter === "upi") matchesStatus = o.paymentMethod === "upi";
-    else if (statusFilter === "phonepe") matchesStatus = o.paymentMethod === "phonepe";
 
     return matchesSearch && matchesStatus;
   });
 
   const totalCollectedInr = paidOrders.reduce((sum, o) => sum + (o.total || 0), 0);
   const pendingInr = pendingOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-
-  const handleManualReconcile = async () => {
-    setIsReconciling(true);
-    setReconcileMessage(null);
-    try {
-      await onReconcile("all_pending");
-      setReconcileMessage("Reconciliation cycle finished. Statuses refreshed.");
-      setTimeout(() => setReconcileMessage(null), 5000);
-    } catch {
-      setReconcileMessage("Reconciliation trigger logged.");
-      setTimeout(() => setReconcileMessage(null), 4000);
-    } finally {
-      setIsReconciling(false);
-      onRefresh();
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -290,17 +269,17 @@ export function PaymentsView({
           <CardContent className="p-5 sm:p-6 flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                PhonePe Gateway
+                Bank Cleared Orders
               </p>
               <h3 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
-                {orders.filter((o) => o.paymentMethod === "phonepe").length}
+                {paidOrders.length}
               </h3>
               <p className="text-xs text-neutral-500 font-medium mt-1">
-                Auto-reconciler active
+                Direct to Bank Account
               </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-              <Activity className="w-5 h-5" />
+              <CheckCircle2 className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
@@ -444,7 +423,6 @@ export function PaymentsView({
                 { key: "pending", label: `Pending (${pendingOrders.length})` },
                 { key: "paid", label: `Verified (${paidOrders.length})` },
                 { key: "upi", label: "UPI Direct" },
-                { key: "phonepe", label: "PhonePe" },
               ].map((f) => (
                 <Button
                   key={f.key}
@@ -569,44 +547,6 @@ export function PaymentsView({
                 )}
               </TableBody>
             </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ─── 5. PhonePe Gateway Automated Reconciler Section ─── */}
-      <Card className="border-neutral-200 bg-neutral-50/40">
-        <CardContent className="p-4 sm:p-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Server className="w-4 h-4 text-purple-600" />
-                <h4 className="text-sm font-semibold text-neutral-900">
-                  Background Payment Reconciler Worker
-                </h4>
-                <Badge variant="outline" className="border-emerald-300 bg-emerald-50 text-emerald-700 text-[10px]">
-                  Worker Active (60s cron)
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground max-w-xl">
-                Automatically queries PhonePe payment gateway API every 60 seconds with Upstash Redis distributed locking to update pending transactions and prevent double charges.
-              </p>
-              {reconcileMessage && (
-                <p className="text-xs text-emerald-700 font-medium bg-emerald-50 border border-emerald-200 rounded px-2 py-1 inline-block">
-                  {reconcileMessage}
-                </p>
-              )}
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleManualReconcile}
-              disabled={isReconciling}
-              className="text-xs gap-1.5 h-8 shrink-0 bg-white"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isReconciling ? "animate-spin" : ""}`} />
-              {isReconciling ? "Reconciling..." : "Trigger Gateway Sync"}
-            </Button>
           </div>
         </CardContent>
       </Card>
