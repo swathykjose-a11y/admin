@@ -21,12 +21,51 @@ import type {
 } from "@/types/admin";
 import { Loader2 } from "lucide-react";
 
+const VALID_TABS = [
+  "overview",
+  "payments",
+  "orders",
+  "products",
+  "revenue",
+  "cms",
+] as const;
+
 export default function AdminDashboardPage() {
   const router = useRouter();
 
-  // Navigation state
+  // Navigation state with URL and localStorage persistence
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // Restore tab from URL query param (?tab=...) or localStorage on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const queryTab = params.get("tab");
+    const hashTab = window.location.hash.replace("#", "");
+    const savedTab = localStorage.getItem("dd_admin_active_tab");
+
+    const candidate = queryTab || hashTab || savedTab;
+    if (candidate && (VALID_TABS as readonly string[]).includes(candidate)) {
+      setActiveTab(candidate);
+      if (queryTab !== candidate) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("tab", candidate);
+        window.history.replaceState(null, "", url.toString());
+      }
+    }
+  }, []);
+
+  const handleSelectTab = (tab: string) => {
+    setActiveTab(tab);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("dd_admin_active_tab", tab);
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", tab);
+      window.history.replaceState(null, "", url.toString());
+    }
+  };
 
   // Data state
   const [orders, setOrders] = useState<AdminOrder[]>([]);
@@ -167,7 +206,7 @@ export default function AdminDashboardPage() {
       {/* ─── Modern Left Sidebar Navigation ─── */}
       <AdminSidebar
         activeTab={activeTab}
-        onSelectTab={setActiveTab}
+        onSelectTab={handleSelectTab}
         pendingPaymentsCount={pendingPaymentsCount}
         needsDropshipCount={needsDropshipCount}
         productsCount={products.length}
@@ -185,7 +224,7 @@ export default function AdminDashboardPage() {
           activeTab={activeTab}
           onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
           pendingPaymentsCount={pendingPaymentsCount}
-          onNavigateTab={setActiveTab}
+          onNavigateTab={handleSelectTab}
           onRefresh={loadData}
           onLogout={handleLogout}
           onOpenAddProduct={
@@ -212,7 +251,7 @@ export default function AdminDashboardPage() {
                   orders={orders}
                   products={products}
                   paymentOverview={paymentOverview}
-                  onNavigateTab={setActiveTab}
+                  onNavigateTab={handleSelectTab}
                   onOpenVerifyModal={(order) => setVerifyModalOrder(order)}
                   onOpenQrModal={() => setShowQrModal(true)}
                 />
