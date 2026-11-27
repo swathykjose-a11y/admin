@@ -2,26 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Check,
-  Upload,
-  Loader2,
-  Image as ImageIcon,
-  X,
-} from "lucide-react";
+import { Check, Upload, Loader2, X } from "lucide-react";
 import { adminApi } from "@/lib/api";
 
 export type CmsSectionKey = "hero" | "featured" | "editorial" | "story" | "bottom-banner";
 
 interface CmsViewProps {
-  onSaveCms: (
-    section: CmsSectionKey,
-    data: any,
-  ) => Promise<boolean>;
+  onSaveCms: (section: CmsSectionKey, data: any) => Promise<boolean>;
 }
 
 const CLOUDINARY_DEFAULTS = {
@@ -164,7 +154,7 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
       const base64Data = await base64Promise;
       const uploaded = await adminApi.uploadImage(base64Data, "dainty-dazzle");
       setImageUrl(uploaded.url);
-      toast.success("Image uploaded successfully");
+      toast.success("Image uploaded");
     } catch (err: any) {
       const msg = err?.message || "Image upload failed";
       setUploadErrors((prev) => ({
@@ -260,33 +250,27 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
     }
   };
 
-  // Clean Image Uploader — preview shows only the image, no URLs or metadata
-  const renderImageUploader = (
+  const renderImagePanel = (
     sectionId: string,
     currentUrl: string,
     setUrl: (url: string) => void,
-    label: string = "Section Photography",
+    altLabel: string,
   ) => {
     const isUploading = uploadingSection === sectionId;
     const error = uploadErrors[sectionId];
 
     return (
       <div className="space-y-3">
-        <label className="text-xs font-medium text-neutral-700 flex items-center gap-1.5">
-          <ImageIcon className="w-3.5 h-3.5 text-neutral-400" />
-          {label}
-        </label>
-
         {currentUrl ? (
-          <div className="relative group rounded-xl overflow-hidden border border-neutral-200 bg-neutral-100 aspect-16/9">
+          <div className="relative group rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100 aspect-4/3">
             <img
               src={currentUrl}
-              alt={label}
+              alt={altLabel}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-neutral-950/0 group-hover:bg-neutral-950/25 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-              <label className="cursor-pointer bg-white/95 hover:bg-white text-neutral-900 text-xs font-medium px-3 py-1.5 rounded-lg shadow-sm transition-all">
-                {isUploading ? "Uploading..." : "Replace Image"}
+            <div className="absolute inset-0 bg-neutral-950/0 group-hover:bg-neutral-950/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+              <label className="cursor-pointer bg-white/95 hover:bg-white text-neutral-900 text-xs font-medium px-3.5 py-2 rounded-lg shadow-sm">
+                {isUploading ? "Uploading..." : "Replace image"}
                 <input
                   type="file"
                   accept="image/*"
@@ -308,7 +292,7 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
               <X className="w-3.5 h-3.5" />
             </button>
             {isUploading && (
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-xs flex items-center justify-center gap-2">
+              <div className="absolute inset-0 bg-white/80 flex items-center justify-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-neutral-900" />
                 <span className="text-xs font-medium text-neutral-800">Uploading...</span>
               </div>
@@ -317,21 +301,21 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
         ) : (
           <label className="block cursor-pointer">
             <div
-              className={`border border-dashed rounded-xl py-8 px-4 text-center transition-colors ${
+              className={`border border-dashed rounded-lg aspect-4/3 flex flex-col items-center justify-center gap-2 transition-colors ${
                 isUploading
                   ? "border-neutral-400 bg-neutral-100"
-                  : "border-neutral-300 hover:border-neutral-500 bg-neutral-50/50 hover:bg-neutral-50"
+                  : "border-neutral-300 hover:border-neutral-500 bg-neutral-50/70 hover:bg-neutral-50"
               }`}
             >
               {isUploading ? (
-                <div className="flex items-center justify-center gap-2">
+                <div className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin text-neutral-800" />
                   <span className="text-xs font-medium text-neutral-700">
-                    Uploading image...
+                    Uploading...
                   </span>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center gap-1.5">
+                <>
                   <Upload className="w-4 h-4 text-neutral-500" />
                   <span className="text-xs font-medium text-neutral-800">
                     Upload image
@@ -339,7 +323,7 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
                   <span className="text-[11px] text-neutral-400">
                     PNG, JPG, WebP
                   </span>
-                </div>
+                </>
               )}
             </div>
             <input
@@ -367,332 +351,378 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="space-y-1">
-        <h2 className="text-xl font-semibold text-neutral-900 tracking-tight">
-          Storefront Content & Media
-        </h2>
-        <p className="text-xs text-neutral-500 max-w-2xl">
-          Manage homepage copy, call-to-actions, and photography across your live storefront.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        {/* Hero Section */}
-        <Card className="shadow-2xs border-neutral-200/90 bg-white">
-          <CardHeader className="pb-4">
+      {/* 1. Hero Section */}
+      <section className="bg-white border border-neutral-200 rounded-xl p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+          <div className="lg:col-span-7 space-y-4">
             <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-sm font-semibold text-neutral-900">
-                Hero Section Banner
-              </CardTitle>
+              <div>
+                <h2 className="text-sm font-semibold text-neutral-900">
+                  Hero Section Banner
+                </h2>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Full-viewport editorial banner at the top of the homepage.
+                </p>
+              </div>
               {savedSection === "hero" && (
                 <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
                   <Check className="w-3.5 h-3.5" /> Saved
                 </span>
               )}
             </div>
-            <CardDescription className="text-xs text-neutral-500">
-              Full-viewport editorial banner at the top of the homepage.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
-                Headline
-              </label>
-              <Input
-                value={heroHeadline}
-                onChange={(e) => setHeroHeadline(e.target.value)}
-                className="text-xs h-9"
-              />
-            </div>
 
-            <div>
-              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
-                Subtitle
-              </label>
-              <Textarea
-                value={heroSubtitle}
-                onChange={(e) => setHeroSubtitle(e.target.value)}
-                rows={2}
-                className="text-xs resize-none"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-3 pt-1">
               <div>
                 <label className="text-xs font-medium text-neutral-700 block mb-1.5">
-                  Button Label
+                  Headline
                 </label>
                 <Input
-                  value={heroCtaText}
-                  onChange={(e) => setHeroCtaText(e.target.value)}
+                  value={heroHeadline}
+                  onChange={(e) => setHeroHeadline(e.target.value)}
                   className="text-xs h-9"
                 />
               </div>
+
               <div>
                 <label className="text-xs font-medium text-neutral-700 block mb-1.5">
-                  Button Destination
+                  Subtitle
                 </label>
-                <Input
-                  value={heroCtaLink}
-                  onChange={(e) => setHeroCtaLink(e.target.value)}
-                  className="text-xs h-9"
+                <Textarea
+                  value={heroSubtitle}
+                  onChange={(e) => setHeroSubtitle(e.target.value)}
+                  rows={2}
+                  className="text-xs resize-none"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                    Button Label
+                  </label>
+                  <Input
+                    value={heroCtaText}
+                    onChange={(e) => setHeroCtaText(e.target.value)}
+                    className="text-xs h-9"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                    Button Destination
+                  </label>
+                  <Input
+                    value={heroCtaLink}
+                    onChange={(e) => setHeroCtaLink(e.target.value)}
+                    className="text-xs h-9"
+                  />
+                </div>
               </div>
             </div>
 
-            {renderImageUploader("hero", heroImage, setHeroImage, "Hero Photography")}
+            <div className="pt-1">
+              <Button
+                size="sm"
+                disabled={isSaving === "hero"}
+                onClick={handleSaveHero}
+                className="text-xs h-9 px-5 bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer"
+              >
+                {isSaving === "hero" ? (
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
+                  </span>
+                ) : (
+                  "Save Hero Banner"
+                )}
+              </Button>
+            </div>
+          </div>
 
-            <Button
-              size="sm"
-              disabled={isSaving === "hero"}
-              onClick={handleSaveHero}
-              className="w-full text-xs h-9 bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer"
-            >
-              {isSaving === "hero" ? (
-                <span className="flex items-center gap-1.5">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
-                </span>
-              ) : (
-                "Save Hero Banner"
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+          <div className="lg:col-span-5">
+            {renderImagePanel("hero", heroImage, setHeroImage, "Hero Banner")}
+          </div>
+        </div>
+      </section>
 
-        {/* Featured Collections Intro */}
-        <Card className="shadow-2xs border-neutral-200/90 bg-white">
-          <CardHeader className="pb-4">
+      {/* 2. Featured Collections Intro */}
+      <section className="bg-white border border-neutral-200 rounded-xl p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+          <div className="lg:col-span-7 space-y-4">
             <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-sm font-semibold text-neutral-900">
-                Featured Collections Intro
-              </CardTitle>
+              <div>
+                <h2 className="text-sm font-semibold text-neutral-900">
+                  Featured Collections Intro
+                </h2>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Editorial typography displayed beside featured products.
+                </p>
+              </div>
               {savedSection === "featured" && (
                 <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
                   <Check className="w-3.5 h-3.5" /> Saved
                 </span>
               )}
             </div>
-            <CardDescription className="text-xs text-neutral-500">
-              Editorial typography displayed beside top collections on the homepage.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
-                Section Label
-              </label>
-              <Input
-                value={featuredEyebrow}
-                onChange={(e) => setFeaturedEyebrow(e.target.value)}
-                className="text-xs h-9"
-              />
+
+            <div className="space-y-3 pt-1">
+              <div>
+                <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                  Section Label
+                </label>
+                <Input
+                  value={featuredEyebrow}
+                  onChange={(e) => setFeaturedEyebrow(e.target.value)}
+                  className="text-xs h-9"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                  Headline
+                </label>
+                <Textarea
+                  value={featuredHeadline}
+                  onChange={(e) => setFeaturedHeadline(e.target.value)}
+                  rows={3}
+                  className="text-xs resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                  Description
+                </label>
+                <Textarea
+                  value={featuredDesc}
+                  onChange={(e) => setFeaturedDesc(e.target.value)}
+                  rows={2}
+                  className="text-xs resize-none"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
-                Serif Headline
-              </label>
-              <Textarea
-                value={featuredHeadline}
-                onChange={(e) => setFeaturedHeadline(e.target.value)}
-                rows={3}
-                className="text-xs resize-none"
-              />
+            <div className="pt-1">
+              <Button
+                size="sm"
+                disabled={isSaving === "featured"}
+                onClick={handleSaveFeatured}
+                className="text-xs h-9 px-5 bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer"
+              >
+                {isSaving === "featured" ? (
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
+                  </span>
+                ) : (
+                  "Save Featured Content"
+                )}
+              </Button>
             </div>
+          </div>
 
-            <div>
-              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
-                Description
-              </label>
-              <Textarea
-                value={featuredDesc}
-                onChange={(e) => setFeaturedDesc(e.target.value)}
-                rows={3}
-                className="text-xs resize-none"
-              />
+          {/* Live Typography Preview */}
+          <div className="lg:col-span-5">
+            <div className="rounded-lg border border-neutral-200/80 bg-[#f6f5f0] p-6 aspect-4/3 flex flex-col justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-500 mb-3">
+                  {featuredEyebrow || "Our Collection"}
+                </p>
+                <p className="font-serif text-2xl text-neutral-900 leading-tight whitespace-pre-line">
+                  {featuredHeadline || "Creating,\nCrafting\n& Wearing."}
+                </p>
+                <p className="text-xs text-neutral-600 mt-3 leading-relaxed line-clamp-3">
+                  {featuredDesc}
+                </p>
+              </div>
+              <span className="inline-block w-fit text-[10px] uppercase tracking-wider border border-neutral-400 px-3 py-1.5 text-neutral-800">
+                Explore All ↗
+              </span>
             </div>
+          </div>
+        </div>
+      </section>
 
-            <Button
-              size="sm"
-              disabled={isSaving === "featured"}
-              onClick={handleSaveFeatured}
-              className="w-full text-xs h-9 bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer"
-            >
-              {isSaving === "featured" ? (
-                <span className="flex items-center gap-1.5">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
-                </span>
-              ) : (
-                "Save Featured Content"
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Mid-Page Editorial Banner */}
-        <Card className="shadow-2xs border-neutral-200/90 bg-white">
-          <CardHeader className="pb-4">
+      {/* 3. Mid-Page Editorial Banner */}
+      <section className="bg-white border border-neutral-200 rounded-xl p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+          <div className="lg:col-span-7 space-y-4">
             <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-sm font-semibold text-neutral-900">
-                Mid-Page Editorial Banner
-              </CardTitle>
+              <div>
+                <h2 className="text-sm font-semibold text-neutral-900">
+                  Mid-Page Editorial Banner
+                </h2>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Wide editorial photo with left-aligned statement.
+                </p>
+              </div>
               {savedSection === "editorial" && (
                 <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
                   <Check className="w-3.5 h-3.5" /> Saved
                 </span>
               )}
             </div>
-            <CardDescription className="text-xs text-neutral-500">
-              Wide cinematic editorial photo with left-aligned statement.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
-                Headline
-              </label>
-              <Input
-                value={editorialHeadline}
-                onChange={(e) => setEditorialHeadline(e.target.value)}
-                className="text-xs h-9"
-              />
+
+            <div className="space-y-3 pt-1">
+              <div>
+                <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                  Headline
+                </label>
+                <Input
+                  value={editorialHeadline}
+                  onChange={(e) => setEditorialHeadline(e.target.value)}
+                  className="text-xs h-9"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                  Subtitle
+                </label>
+                <Textarea
+                  value={editorialSubtitle}
+                  onChange={(e) => setEditorialSubtitle(e.target.value)}
+                  rows={2}
+                  className="text-xs resize-none"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
-                Subtitle
-              </label>
-              <Input
-                value={editorialSubtitle}
-                onChange={(e) => setEditorialSubtitle(e.target.value)}
-                className="text-xs h-9"
-              />
+            <div className="pt-1">
+              <Button
+                size="sm"
+                disabled={isSaving === "editorial"}
+                onClick={handleSaveEditorial}
+                className="text-xs h-9 px-5 bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer"
+              >
+                {isSaving === "editorial" ? (
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
+                  </span>
+                ) : (
+                  "Save Editorial Banner"
+                )}
+              </Button>
             </div>
+          </div>
 
-            {renderImageUploader("editorial", editorialImage, setEditorialImage, "Editorial Photography")}
+          <div className="lg:col-span-5">
+            {renderImagePanel("editorial", editorialImage, setEditorialImage, "Mid-Page Editorial Banner")}
+          </div>
+        </div>
+      </section>
 
-            <Button
-              size="sm"
-              disabled={isSaving === "editorial"}
-              onClick={handleSaveEditorial}
-              className="w-full text-xs h-9 bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer"
-            >
-              {isSaving === "editorial" ? (
-                <span className="flex items-center gap-1.5">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
-                </span>
-              ) : (
-                "Save Editorial Banner"
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Brand Story Section */}
-        <Card className="shadow-2xs border-neutral-200/90 bg-white">
-          <CardHeader className="pb-4">
+      {/* 4. Brand Craftsmanship Story */}
+      <section className="bg-white border border-neutral-200 rounded-xl p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+          <div className="lg:col-span-7 space-y-4">
             <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-sm font-semibold text-neutral-900">
-                Brand Craftsmanship Story
-              </CardTitle>
+              <div>
+                <h2 className="text-sm font-semibold text-neutral-900">
+                  Brand Craftsmanship Story
+                </h2>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Split narrative section detailing studio intention and craftsmanship.
+                </p>
+              </div>
               {savedSection === "story" && (
                 <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
                   <Check className="w-3.5 h-3.5" /> Saved
                 </span>
               )}
             </div>
-            <CardDescription className="text-xs text-neutral-500">
-              Split narrative section detailing studio intention and craftsmanship.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+
+            <div className="space-y-3 pt-1">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                    Story Label
+                  </label>
+                  <Input
+                    value={storyEyebrow}
+                    onChange={(e) => setStoryEyebrow(e.target.value)}
+                    className="text-xs h-9"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                    Story Headline
+                  </label>
+                  <Input
+                    value={storyHeadline}
+                    onChange={(e) => setStoryHeadline(e.target.value)}
+                    className="text-xs h-9"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="text-xs font-medium text-neutral-700 block mb-1.5">
-                  Story Label
+                  Studio Process
                 </label>
-                <Input
-                  value={storyEyebrow}
-                  onChange={(e) => setStoryEyebrow(e.target.value)}
-                  className="text-xs h-9"
+                <Textarea
+                  value={storyP1}
+                  onChange={(e) => setStoryP1(e.target.value)}
+                  rows={2}
+                  className="text-xs resize-none"
                 />
               </div>
+
               <div>
                 <label className="text-xs font-medium text-neutral-700 block mb-1.5">
-                  Story Headline
+                  Philosophy
                 </label>
-                <Input
-                  value={storyHeadline}
-                  onChange={(e) => setStoryHeadline(e.target.value)}
-                  className="text-xs h-9"
+                <Textarea
+                  value={storyP2}
+                  onChange={(e) => setStoryP2(e.target.value)}
+                  rows={2}
+                  className="text-xs resize-none"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
-                Studio Process
-              </label>
-              <Textarea
-                value={storyP1}
-                onChange={(e) => setStoryP1(e.target.value)}
-                rows={2}
-                className="text-xs resize-none"
-              />
+            <div className="pt-1">
+              <Button
+                size="sm"
+                disabled={isSaving === "story"}
+                onClick={handleSaveStory}
+                className="text-xs h-9 px-5 bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer"
+              >
+                {isSaving === "story" ? (
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
+                  </span>
+                ) : (
+                  "Save Story Section"
+                )}
+              </Button>
             </div>
+          </div>
 
-            <div>
-              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
-                Philosophy
-              </label>
-              <Textarea
-                value={storyP2}
-                onChange={(e) => setStoryP2(e.target.value)}
-                rows={2}
-                className="text-xs resize-none"
-              />
-            </div>
+          <div className="lg:col-span-5">
+            {renderImagePanel("story", storyImage, setStoryImage, "Brand Craftsmanship Story")}
+          </div>
+        </div>
+      </section>
 
-            {renderImageUploader("story", storyImage, setStoryImage, "Craft Story Photography")}
-
-            <Button
-              size="sm"
-              disabled={isSaving === "story"}
-              onClick={handleSaveStory}
-              className="w-full text-xs h-9 bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer"
-            >
-              {isSaving === "story" ? (
-                <span className="flex items-center gap-1.5">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
-                </span>
-              ) : (
-                "Save Story Section"
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Bottom Editorial Banner */}
-        <Card className="shadow-2xs border-neutral-200/90 bg-white lg:col-span-2">
-          <CardHeader className="pb-4">
+      {/* 5. Bottom Editorial Banner */}
+      <section className="bg-white border border-neutral-200 rounded-xl p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+          <div className="lg:col-span-7 space-y-4">
             <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-sm font-semibold text-neutral-900">
-                Bottom Editorial Banner
-              </CardTitle>
+              <div>
+                <h2 className="text-sm font-semibold text-neutral-900">
+                  Bottom Editorial Banner
+                </h2>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Closing editorial banner displayed right above the footer.
+                </p>
+              </div>
               {savedSection === "bottom-banner" && (
                 <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
                   <Check className="w-3.5 h-3.5" /> Saved
                 </span>
               )}
             </div>
-            <CardDescription className="text-xs text-neutral-500">
-              Wide cinematic closing banner right above the footer.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div className="space-y-3 pt-1">
               <div>
                 <label className="text-xs font-medium text-neutral-700 block mb-1.5">
                   Headline
@@ -708,35 +738,38 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
                 <label className="text-xs font-medium text-neutral-700 block mb-1.5">
                   Subtitle
                 </label>
-                <Input
+                <Textarea
                   value={bottomSubtitle}
                   onChange={(e) => setBottomSubtitle(e.target.value)}
-                  className="text-xs h-9"
+                  rows={2}
+                  className="text-xs resize-none"
                 />
               </div>
             </div>
 
-            <div className="max-w-xl">
-              {renderImageUploader("bottom-banner", bottomImage, setBottomImage, "Bottom Banner Photography")}
+            <div className="pt-1">
+              <Button
+                size="sm"
+                disabled={isSaving === "bottom-banner"}
+                onClick={handleSaveBottom}
+                className="text-xs h-9 px-5 bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer"
+              >
+                {isSaving === "bottom-banner" ? (
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
+                  </span>
+                ) : (
+                  "Save Bottom Banner"
+                )}
+              </Button>
             </div>
+          </div>
 
-            <Button
-              size="sm"
-              disabled={isSaving === "bottom-banner"}
-              onClick={handleSaveBottom}
-              className="w-full md:w-auto md:min-w-52 text-xs h-9 bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer"
-            >
-              {isSaving === "bottom-banner" ? (
-                <span className="flex items-center gap-1.5">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
-                </span>
-              ) : (
-                "Save Bottom Banner"
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+          <div className="lg:col-span-5">
+            {renderImagePanel("bottom-banner", bottomImage, setBottomImage, "Bottom Editorial Banner")}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
