@@ -119,8 +119,16 @@ export default function AdminDashboardPage() {
   };
 
   const handleDeleteProduct = async (id: string) => {
-    await adminApi.deleteProduct(id);
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    try {
+      const ok = await adminApi.deleteProduct(id);
+      if (!ok) {
+        alert("Server could not delete this product. Please check your connection.");
+        return;
+      }
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+    } catch (err: any) {
+      alert(`Error deleting product: ${err?.message || "Server error"}`);
+    }
   };
 
   const handleSaveCms = async (
