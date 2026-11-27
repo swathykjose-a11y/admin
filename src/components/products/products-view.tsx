@@ -417,13 +417,18 @@ export function ProductsView({
                         size="icon"
                         className="h-8 w-8 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                         onClick={() => {
-                          if (
-                            window.confirm(
-                              `Are you sure you want to delete "${prod.title}"? It will be removed immediately from both the catalog and the live storefront.`,
-                            )
-                          ) {
-                            onDeleteProduct(prod.id);
-                          }
+                          toast(`Delete "${prod.title}"?`, {
+                            description:
+                              "It will be removed immediately from the catalog and live storefront.",
+                            action: {
+                              label: "Delete",
+                              onClick: () => onDeleteProduct(prod.id),
+                            },
+                            cancel: {
+                              label: "Cancel",
+                              onClick: () => {},
+                            },
+                          });
                         }}
                         title="Delete product"
                       >
