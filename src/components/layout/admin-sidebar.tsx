@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +40,7 @@ export function AdminSidebar({
     e.stopPropagation();
     navigator.clipboard.writeText("swathykjose-6@okhdfcbank");
     setCopiedVpa(true);
+    toast.success("UPI ID copied to clipboard");
     setTimeout(() => setCopiedVpa(false), 2000);
   };
 
@@ -48,12 +50,12 @@ export function AdminSidebar({
       items: [
         {
           id: "overview",
-          label: "Dashboard Overview",
+          label: "Dashboard",
           badge: null,
         },
         {
           id: "payments",
-          label: "Payment Receiving",
+          label: "Payment",
           badge:
             pendingPaymentsCount > 0 ? (
               <Badge className="bg-amber-500 hover:bg-amber-500 text-white text-[10px] px-1.5 py-0 h-4.5 min-w-4.5 flex items-center justify-center font-bold">
@@ -63,7 +65,7 @@ export function AdminSidebar({
         },
         {
           id: "orders",
-          label: "Orders & Dropship",
+          label: "Orders",
           badge:
             needsDropshipCount > 0 ? (
               <Badge className="bg-blue-600 hover:bg-blue-600 text-white text-[10px] px-1.5 py-0 h-4.5 min-w-4.5 flex items-center justify-center font-bold">
@@ -73,7 +75,7 @@ export function AdminSidebar({
         },
         {
           id: "products",
-          label: "Jewelry Catalog",
+          label: "Products",
           badge: (
             <span className="text-[11px] text-muted-foreground font-mono">
               {productsCount}
@@ -92,7 +94,7 @@ export function AdminSidebar({
         },
         {
           id: "cms",
-          label: "Homepage CMS",
+          label: "CMS",
           badge: null,
         },
       ],

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { AdminHeader } from "@/components/layout/admin-header";
 import { AdminSidebar } from "@/components/layout/admin-sidebar";
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
@@ -81,7 +82,7 @@ export default function AdminDashboardPage() {
   );
   const [showQrModal, setShowQrModal] = useState(false);
 
-  const loadData = async () => {
+  const loadData = async (showToast = false) => {
     setIsLoading(true);
     try {
       const [ordersRes, productsRes, paymentsRes] = await Promise.all([
@@ -96,8 +97,14 @@ export default function AdminDashboardPage() {
       setIsBackendConnected(
         ordersRes.isLive || productsRes.isLive || paymentsRes.isLive,
       );
+      if (showToast) {
+        toast.success("Storefront data synced");
+      }
     } catch (err) {
       console.error("Failed to load admin data", err);
+      if (showToast) {
+        toast.error("Failed to sync storefront data");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -125,6 +132,7 @@ export default function AdminDashboardPage() {
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, ...res.order } : o)),
     );
+    toast.success("Order fulfillment updated");
   };
 
   const handleVerifyPayment = async (
@@ -140,6 +148,7 @@ export default function AdminDashboardPage() {
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, ...res.order } : o)),
     );
+    toast.success(`Payment marked as ${payload.paymentStatus}`);
 
     // Refresh payment stats in background
     adminApi.getPaymentOverview().then((res) => {
@@ -150,18 +159,20 @@ export default function AdminDashboardPage() {
   const handleAddProduct = async (productData: Partial<AdminProduct>) => {
     const created = await adminApi.upsertProduct(productData);
     setProducts((prev) => [created, ...prev]);
+    toast.success(`"${created.title}" published to store`);
   };
 
   const handleDeleteProduct = async (id: string) => {
     try {
       const ok = await adminApi.deleteProduct(id);
       if (!ok) {
-        alert("Server could not delete this product. Please check your connection.");
+        toast.error("Server could not delete this product. Please check your connection.");
         return;
       }
       setProducts((prev) => prev.filter((p) => p.id !== id));
+      toast.success("Product deleted from catalog");
     } catch (err: any) {
-      alert(`Error deleting product: ${err?.message || "Server error"}`);
+      toast.error(err?.message || "Error deleting product");
     }
   };
 
@@ -169,7 +180,13 @@ export default function AdminDashboardPage() {
     section: "hero" | "featured" | "editorial" | "story" | "bottom-banner",
     data: any,
   ) => {
-    return await adminApi.updateCMS(section, data);
+    const ok = await adminApi.updateCMS(section, data);
+    if (ok) {
+      toast.success("Section saved and live on storefront");
+    } else {
+      toast.error("Failed to save section changes");
+    }
+    return ok;
   };
 
   const handleLogout = async () => {
@@ -220,7 +237,7 @@ export default function AdminDashboardPage() {
           onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
           pendingPaymentsCount={pendingPaymentsCount}
           onNavigateTab={handleSelectTab}
-          onRefresh={loadData}
+          onRefresh={() => loadData(true)}
           onLogout={handleLogout}
           onOpenAddProduct={
             activeTab === "products"
@@ -257,7 +274,7 @@ export default function AdminDashboardPage() {
                   orders={orders}
                   overview={paymentOverview}
                   onVerifyPayment={handleVerifyPayment}
-                  onRefresh={loadData}
+                  onRefresh={() => loadData(true)}
                 />
               )}
 
@@ -266,7 +283,7 @@ export default function AdminDashboardPage() {
                   orders={orders}
                   onUpdateOrder={handleUpdateOrder}
                   onVerifyPayment={handleVerifyPayment}
-                  onRefresh={loadData}
+                  onRefresh={() => loadData(true)}
                 />
               )}
 
@@ -275,7 +292,7 @@ export default function AdminDashboardPage() {
                   products={products}
                   onAddProduct={handleAddProduct}
                   onDeleteProduct={handleDeleteProduct}
-                  onRefresh={loadData}
+                  onRefresh={() => loadData(true)}
                 />
               )}
 

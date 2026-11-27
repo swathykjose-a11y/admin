@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { AdminProduct } from "@/types/admin";
 import {
   Table,
@@ -35,7 +36,6 @@ import {
   X,
   Layers,
   IndianRupee,
-  Link as LinkIcon,
   FolderPlus,
   Eye,
   ShoppingBag,
@@ -91,7 +91,6 @@ export function ProductsView({
   const [compareAtPrice, setCompareAtPrice] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-  const [imageTab, setImageTab] = useState<"upload" | "url">("upload");
   const [tags, setTags] = useState("gold, new");
   const [stock, setStock] = useState("25");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -147,8 +146,11 @@ export function ProductsView({
           const uploadRes = await adminApi.uploadImage(base64);
           setImageUrl(uploadRes.url);
           setUploadError(null);
+          toast.success("Product image uploaded");
         } catch (err: any) {
-          setUploadError(err?.message || "Cloudinary upload failed");
+          const msg = err?.message || "Image upload failed";
+          setUploadError(msg);
+          toast.error(msg);
         } finally {
           setIsUploadingImage(false);
         }
@@ -442,18 +444,11 @@ export function ProductsView({
           {/* Header */}
           <div className="px-7 py-4.5 border-b bg-neutral-50/60 shrink-0 flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-semibold text-neutral-600 border-neutral-300">
-                  Jewelry Catalog
-                </Badge>
-                <span className="text-neutral-300">•</span>
-                <span className="text-xs text-neutral-500 font-medium">Product Studio</span>
-              </div>
               <DialogTitle className="text-xl font-bold tracking-tight text-neutral-900">
                 Add New Product
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                Publish handcrafted pieces with instant category routing and Cloudinary CDN optimization.
+                Publish handcrafted pieces with instant category routing.
               </DialogDescription>
             </div>
           </div>
@@ -709,126 +704,74 @@ export function ProductsView({
                 <div className="lg:col-span-5 space-y-6">
                   {/* Media Upload Card */}
                   <div className="p-4 rounded-xl border border-neutral-200 bg-neutral-50/50 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-500 flex items-center gap-1.5">
-                        <ImageIcon className="w-3.5 h-3.5" />
-                        Product Media
-                      </h4>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-500 flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      Product Media
+                    </h4>
 
-                      <div className="flex rounded-md border border-neutral-200 p-0.5 bg-neutral-100 text-[11px]">
-                        <button
-                          type="button"
-                          onClick={() => setImageTab("upload")}
-                          className={`px-2.5 py-0.5 rounded font-medium transition-colors cursor-pointer ${
-                            imageTab === "upload" ? "bg-white text-neutral-900 shadow-2xs" : "text-neutral-600 hover:text-neutral-900"
+                    <div>
+                      <label className="block cursor-pointer">
+                        <div
+                          className={`border-2 border-dashed rounded-xl p-4 text-center transition-all ${
+                            isUploadingImage
+                              ? "border-neutral-400 bg-neutral-50"
+                              : "border-neutral-200 hover:border-neutral-400 hover:bg-white bg-white/70"
                           }`}
                         >
-                          Upload File
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setImageTab("url")}
-                          className={`px-2.5 py-0.5 rounded font-medium transition-colors cursor-pointer ${
-                            imageTab === "url" ? "bg-white text-neutral-900 shadow-2xs" : "text-neutral-600 hover:text-neutral-900"
-                          }`}
-                        >
-                          Paste URL
-                        </button>
-                      </div>
+                          {isUploadingImage ? (
+                            <div className="flex flex-col items-center justify-center gap-2 py-3">
+                              <Loader2 className="w-6 h-6 animate-spin text-neutral-800" />
+                              <p className="text-xs font-semibold text-neutral-800">
+                                Uploading image...
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center gap-1 py-2">
+                              <div className="w-9 h-9 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600 mb-0.5">
+                                <Upload className="w-4 h-4" />
+                              </div>
+                              <p className="text-xs font-semibold text-neutral-800">
+                                Click to upload image
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">
+                                PNG, JPG, WebP up to 8MB
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={isUploadingImage}
+                          onChange={handleFileUpload}
+                        />
+                      </label>
+
+                      {uploadError && (
+                        <div className="mt-2 p-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+                          <X className="w-3.5 h-3.5 shrink-0" />
+                          <span>{uploadError}</span>
+                        </div>
+                      )}
                     </div>
 
-                    {imageTab === "upload" ? (
-                      <div>
-                        <label className="block cursor-pointer">
-                          <div
-                            className={`border-2 border-dashed rounded-xl p-4 text-center transition-all ${
-                              isUploadingImage
-                                ? "border-neutral-400 bg-neutral-50"
-                                : "border-neutral-200 hover:border-neutral-400 hover:bg-white bg-white/70"
-                            }`}
-                          >
-                            {isUploadingImage ? (
-                              <div className="flex flex-col items-center justify-center gap-2 py-3">
-                                <Loader2 className="w-6 h-6 animate-spin text-neutral-800" />
-                                <p className="text-xs font-semibold text-neutral-800">
-                                  Uploading to Cloudinary CDN...
-                                </p>
-                                <p className="text-[11px] text-muted-foreground">
-                                  Auto AVIF/WebP optimization
-                                </p>
-                              </div>
-                            ) : (
-                              <div className="flex flex-col items-center justify-center gap-1 py-2">
-                                <div className="w-9 h-9 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600 mb-0.5">
-                                  <Upload className="w-4 h-4" />
-                                </div>
-                                <p className="text-xs font-semibold text-neutral-800">
-                                  Click to upload image or drag and drop
-                                </p>
-                                <p className="text-[10px] text-muted-foreground">
-                                  PNG, JPG, WebP up to 8MB • Cloudinary CDN
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            disabled={isUploadingImage}
-                            onChange={handleFileUpload}
-                          />
-                        </label>
-
-                        {uploadError && (
-                          <div className="mt-2 p-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
-                            <X className="w-3.5 h-3.5 shrink-0" />
-                            <span>{uploadError}</span>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="space-y-1.5">
-                        <div className="relative">
-                          <LinkIcon className="w-3.5 h-3.5 absolute left-3 top-3 text-neutral-400" />
-                          <Input
-                            placeholder="Paste image URL (https://res.cloudinary.com/...)"
-                            value={imageUrl}
-                            onChange={(e) => setImageUrl(e.target.value)}
-                            className="text-xs h-9.5 pl-8.5 font-mono text-[11px] rounded-lg bg-white"
-                          />
-                        </div>
-                        <p className="text-[10px] text-muted-foreground">
-                          Accepts Cloudinary or HTTPS image links.
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Image Confirmation Pill */}
+                    {/* Clean Image Preview Only */}
                     {imageUrl && (
-                      <div className="flex items-center gap-2.5 p-2 bg-white rounded-lg border border-neutral-200">
+                      <div className="relative group rounded-lg overflow-hidden border border-neutral-200 bg-white w-20 h-20">
                         <img
                           src={imageUrl}
-                          alt="Thumbnail"
-                          className="w-10 h-10 object-cover rounded bg-neutral-100 border shrink-0"
+                          alt="Product preview"
+                          className="w-full h-full object-cover"
                         />
-                        <div className="min-w-0 flex-1">
-                          <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.2">
-                            {imageUrl.includes("cloudinary") ? "Cloudinary CDN Active" : "External Asset"}
-                          </span>
-                          <p className="text-[10px] font-mono text-neutral-500 truncate mt-0.5">
-                            {imageUrl}
-                          </p>
-                        </div>
-                        <Button
+                        <button
                           type="button"
-                          variant="ghost"
-                          size="sm"
                           onClick={() => setImageUrl("")}
-                          className="text-[11px] text-neutral-500 hover:text-red-600 hover:bg-red-50 h-7 px-2"
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-white/90 hover:bg-white text-neutral-700 hover:text-red-600 shadow-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                          title="Remove image"
                         >
-                          Remove
-                        </Button>
+                          <X className="w-3 h-3" />
+                        </button>
                       </div>
                     )}
                   </div>
@@ -933,10 +876,7 @@ export function ProductsView({
                       <span>Publishing...</span>
                     </>
                   ) : (
-                    <>
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Publish Product</span>
-                    </>
+                    <span>Publish Product</span>
                   )}
                 </Button>
               </div>

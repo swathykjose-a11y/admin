@@ -33,32 +33,32 @@ export function AdminHeader({
     switch (tab) {
       case "overview":
         return {
-          title: "Dashboard Overview",
+          title: "Dashboard",
           subtitle: "Real-time revenue, orders & dropship metrics",
         };
       case "payments":
         return {
-          title: "Payment Receiving & Reconciliation",
+          title: "Payment",
           subtitle: "Direct UPI receiving, bank verifications & gateway logs",
         };
       case "orders":
         return {
-          title: "Orders & Dropship Fulfillment",
+          title: "Orders",
           subtitle: "Customer orders, supplier procurement & tracking",
         };
       case "products":
         return {
-          title: "Jewelry Catalog & Inventory",
-          subtitle: "Manage products, variant pricing & stock",
+          title: "Products",
+          subtitle: "Manage products, category pricing & stock",
         };
       case "revenue":
         return {
-          title: "Revenue, Profit & Margins",
+          title: "Revenue & Margins",
           subtitle: "Gross sales, supplier costs & net margins",
         };
       case "cms":
         return {
-          title: "Homepage CMS & Editorial",
+          title: "CMS",
           subtitle: "Hero banners, featured showcases & brand story",
         };
       default:

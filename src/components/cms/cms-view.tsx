@@ -1,21 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import {
   Check,
   Upload,
   Loader2,
   Image as ImageIcon,
-  Sparkles,
-  Link as LinkIcon,
   X,
-  Layers,
-  Sparkle,
 } from "lucide-react";
 import { adminApi } from "@/lib/api";
 
@@ -148,7 +144,6 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
     };
   }, []);
 
-  // Generic Cloudinary image upload handler for any section
   const handleImageUpload = async (
     sectionKey: string,
     file: File,
@@ -169,12 +164,14 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
       const base64Data = await base64Promise;
       const uploaded = await adminApi.uploadImage(base64Data, "dainty-dazzle");
       setImageUrl(uploaded.url);
+      toast.success("Image uploaded successfully");
     } catch (err: any) {
-      console.error(`Failed to upload ${sectionKey} image to Cloudinary:`, err);
+      const msg = err?.message || "Image upload failed";
       setUploadErrors((prev) => ({
         ...prev,
-        [sectionKey]: err?.message || "Cloudinary upload failed",
+        [sectionKey]: msg,
       }));
+      toast.error(msg);
     } finally {
       setUploadingSection(null);
     }
@@ -185,7 +182,6 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
     setTimeout(() => setSavedSection(null), 3000);
   };
 
-  // 1. Save Hero
   const handleSaveHero = async () => {
     setIsSaving("hero");
     try {
@@ -202,7 +198,6 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
     }
   };
 
-  // 2. Save Featured
   const handleSaveFeatured = async () => {
     setIsSaving("featured");
     try {
@@ -219,7 +214,6 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
     }
   };
 
-  // 3. Save Editorial
   const handleSaveEditorial = async () => {
     setIsSaving("editorial");
     try {
@@ -234,7 +228,6 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
     }
   };
 
-  // 4. Save Story
   const handleSaveStory = async () => {
     setIsSaving("story");
     try {
@@ -253,7 +246,6 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
     }
   };
 
-  // 5. Save Bottom Banner
   const handleSaveBottom = async () => {
     setIsSaving("bottom-banner");
     try {
@@ -268,7 +260,7 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
     }
   };
 
-  // Reusable Image Uploader Component
+  // Clean Image Uploader — preview shows only the image, no URLs or metadata
   const renderImageUploader = (
     sectionId: string,
     currentUrl: string,
@@ -279,163 +271,145 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
     const error = uploadErrors[sectionId];
 
     return (
-      <div className="space-y-2.5 p-3.5 rounded-xl border border-neutral-200/80 bg-neutral-50/50">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-semibold text-neutral-800 flex items-center gap-1.5">
-            <ImageIcon className="w-3.5 h-3.5 text-neutral-500" />
-            {label}
-          </label>
-          <span className="text-[10px] text-neutral-400 font-mono">Cloudinary CDN</span>
-        </div>
+      <div className="space-y-3">
+        <label className="text-xs font-medium text-neutral-700 flex items-center gap-1.5">
+          <ImageIcon className="w-3.5 h-3.5 text-neutral-400" />
+          {label}
+        </label>
 
-        {/* Upload dropzone / button */}
-        <label className="block cursor-pointer">
-          <div
-            className={`border border-dashed rounded-lg p-3 text-center transition-all ${
-              isUploading
-                ? "border-neutral-400 bg-neutral-100"
-                : "border-neutral-300 hover:border-neutral-500 bg-white hover:bg-neutral-50/80"
-            }`}
-          >
-            {isUploading ? (
-              <div className="flex items-center justify-center gap-2 py-1">
-                <Loader2 className="w-4 h-4 animate-spin text-neutral-800" />
-                <span className="text-xs font-medium text-neutral-700">
-                  Uploading to Cloudinary...
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center gap-2 py-1">
-                <Upload className="w-4 h-4 text-neutral-600" />
-                <span className="text-xs font-medium text-neutral-800">
-                  Upload new image to Cloudinary
-                </span>
-                <span className="text-[10px] text-muted-foreground hidden sm:inline">
-                  (PNG, JPG, WebP)
-                </span>
+        {currentUrl ? (
+          <div className="relative group rounded-xl overflow-hidden border border-neutral-200 bg-neutral-100 aspect-16/9">
+            <img
+              src={currentUrl}
+              alt={label}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-neutral-950/0 group-hover:bg-neutral-950/25 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+              <label className="cursor-pointer bg-white/95 hover:bg-white text-neutral-900 text-xs font-medium px-3 py-1.5 rounded-lg shadow-sm transition-all">
+                {isUploading ? "Uploading..." : "Replace Image"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={isUploading}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImageUpload(sectionId, file, setUrl);
+                  }}
+                />
+              </label>
+            </div>
+            <button
+              type="button"
+              onClick={() => setUrl("")}
+              className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/90 hover:bg-white text-neutral-700 hover:text-red-600 shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              title="Remove image"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+            {isUploading && (
+              <div className="absolute inset-0 bg-white/80 backdrop-blur-xs flex items-center justify-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-neutral-900" />
+                <span className="text-xs font-medium text-neutral-800">Uploading...</span>
               </div>
             )}
           </div>
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            disabled={isUploading}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleImageUpload(sectionId, file, setUrl);
-            }}
-          />
-        </label>
+        ) : (
+          <label className="block cursor-pointer">
+            <div
+              className={`border border-dashed rounded-xl py-8 px-4 text-center transition-colors ${
+                isUploading
+                  ? "border-neutral-400 bg-neutral-100"
+                  : "border-neutral-300 hover:border-neutral-500 bg-neutral-50/50 hover:bg-neutral-50"
+              }`}
+            >
+              {isUploading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-neutral-800" />
+                  <span className="text-xs font-medium text-neutral-700">
+                    Uploading image...
+                  </span>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-1.5">
+                  <Upload className="w-4 h-4 text-neutral-500" />
+                  <span className="text-xs font-medium text-neutral-800">
+                    Upload image
+                  </span>
+                  <span className="text-[11px] text-neutral-400">
+                    PNG, JPG, WebP
+                  </span>
+                </div>
+              )}
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={isUploading}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImageUpload(sectionId, file, setUrl);
+              }}
+            />
+          </label>
+        )}
 
         {error && (
-          <div className="p-2 rounded bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-1.5">
+          <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-1.5">
             <X className="w-3.5 h-3.5 shrink-0" />
             <span>{error}</span>
           </div>
         )}
-
-        {/* URL Input & Live Thumbnail */}
-        <div className="space-y-1.5 pt-1">
-          <div className="relative">
-            <LinkIcon className="w-3 h-3 absolute left-2.5 top-2.5 text-neutral-400" />
-            <Input
-              value={currentUrl}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://res.cloudinary.com/..."
-              className="text-[11px] h-8 pl-7.5 font-mono bg-white"
-            />
-          </div>
-
-          {currentUrl && (
-            <div className="flex items-center gap-2.5 p-2 bg-white rounded-lg border border-neutral-200 mt-2">
-              <img
-                src={currentUrl}
-                alt="Preview"
-                className="w-12 h-12 object-cover rounded bg-neutral-100 border shrink-0"
-              />
-              <div className="min-w-0 flex-1">
-                <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.2">
-                  {currentUrl.includes("cloudinary") ? "Cloudinary CDN Active" : "Custom Asset"}
-                </span>
-                <p className="text-[10px] font-mono text-neutral-500 truncate mt-0.5">
-                  {currentUrl}
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setUrl("")}
-                className="text-[10px] text-neutral-400 hover:text-red-600 h-6 px-2"
-              >
-                Clear
-              </Button>
-            </div>
-          )}
-        </div>
       </div>
     );
   };
 
   return (
     <div className="space-y-6">
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white rounded-xl border border-neutral-200 shadow-2xs">
-        <div>
-          <div className="flex items-center gap-2 mb-0.5">
-            <Badge variant="outline" className="text-[10px] uppercase font-semibold text-neutral-600">
-              Storefront CMS
-            </Badge>
-            <span className="text-neutral-300">•</span>
-            <span className="text-xs text-neutral-500 font-medium">Cloudinary Integrated</span>
-          </div>
-          <h2 className="text-lg font-bold text-neutral-900 tracking-tight">
-            Homepage Content & Media Management
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            Update copy, call-to-actions, and upload high-resolution photography directly to Cloudinary for instant CDN distribution.
-          </p>
-        </div>
+      {/* Header */}
+      <div className="space-y-1">
+        <h2 className="text-xl font-semibold text-neutral-900 tracking-tight">
+          Storefront Content & Media
+        </h2>
+        <p className="text-xs text-neutral-500 max-w-2xl">
+          Manage homepage copy, call-to-actions, and photography across your live storefront.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* ─── 1. Hero Section ─── */}
-        <Card className="shadow-xs border-neutral-200">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-bold flex items-center gap-2 text-neutral-900">
-                <span className="w-5 h-5 rounded-full bg-neutral-900 text-white text-[11px] flex items-center justify-center font-mono">
-                  1
-                </span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Hero Section */}
+        <Card className="shadow-2xs border-neutral-200/90 bg-white">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-sm font-semibold text-neutral-900">
                 Hero Section Banner
               </CardTitle>
               {savedSection === "hero" && (
                 <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
-                  <Check className="w-3.5 h-3.5" /> Saved & Live
+                  <Check className="w-3.5 h-3.5" /> Saved
                 </span>
               )}
             </div>
-            <CardDescription className="text-xs">
-              The full-viewport editorial hero banner at the top of the homepage.
+            <CardDescription className="text-xs text-neutral-500">
+              Full-viewport editorial banner at the top of the homepage.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 pt-1">
+          <CardContent className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                Headline (Brand Title)
+              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                Headline
               </label>
               <Input
                 value={heroHeadline}
                 onChange={(e) => setHeroHeadline(e.target.value)}
-                className="text-xs h-9 font-medium"
+                className="text-xs h-9"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                Subtitle Statement
+              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                Subtitle
               </label>
               <Textarea
                 value={heroSubtitle}
@@ -447,8 +421,8 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                  CTA Text
+                <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                  Button Label
                 </label>
                 <Input
                   value={heroCtaText}
@@ -457,63 +431,57 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                  CTA Link
+                <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                  Button Destination
                 </label>
                 <Input
                   value={heroCtaLink}
                   onChange={(e) => setHeroCtaLink(e.target.value)}
-                  className="text-xs h-9 font-mono"
+                  className="text-xs h-9"
                 />
               </div>
             </div>
 
-            {/* Cloudinary Image Uploader */}
-            {renderImageUploader("hero", heroImage, setHeroImage, "Hero Background Photography")}
+            {renderImageUploader("hero", heroImage, setHeroImage, "Hero Photography")}
 
             <Button
               size="sm"
               disabled={isSaving === "hero"}
               onClick={handleSaveHero}
-              className="w-full text-xs h-9 bg-neutral-900 text-white hover:bg-neutral-800 gap-1.5"
+              className="w-full text-xs h-9 bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer"
             >
               {isSaving === "hero" ? (
-                <>
+                <span className="flex items-center gap-1.5">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
-                </>
+                </span>
               ) : (
-                <>
-                  <Sparkles className="w-3.5 h-3.5" /> Save Hero Banner
-                </>
+                "Save Hero Banner"
               )}
             </Button>
           </CardContent>
         </Card>
 
-        {/* ─── 2. Featured Collections Intro ─── */}
-        <Card className="shadow-xs border-neutral-200">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-bold flex items-center gap-2 text-neutral-900">
-                <span className="w-5 h-5 rounded-full bg-neutral-900 text-white text-[11px] flex items-center justify-center font-mono">
-                  2
-                </span>
-                Featured Collections Intro Text
+        {/* Featured Collections Intro */}
+        <Card className="shadow-2xs border-neutral-200/90 bg-white">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-sm font-semibold text-neutral-900">
+                Featured Collections Intro
               </CardTitle>
               {savedSection === "featured" && (
                 <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
-                  <Check className="w-3.5 h-3.5" /> Saved & Live
+                  <Check className="w-3.5 h-3.5" /> Saved
                 </span>
               )}
             </div>
-            <CardDescription className="text-xs">
+            <CardDescription className="text-xs text-neutral-500">
               Editorial typography displayed beside top collections on the homepage.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 pt-1">
+          <CardContent className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                Eyebrow Label
+              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                Section Label
               </label>
               <Input
                 value={featuredEyebrow}
@@ -523,26 +491,26 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                Serif Headline (Use Enter/newline for styling line breaks)
+              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                Serif Headline
               </label>
               <Textarea
                 value={featuredHeadline}
                 onChange={(e) => setFeaturedHeadline(e.target.value)}
                 rows={3}
-                className="text-xs"
+                className="text-xs resize-none"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                Description Paragraph
+              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                Description
               </label>
               <Textarea
                 value={featuredDesc}
                 onChange={(e) => setFeaturedDesc(e.target.value)}
                 rows={3}
-                className="text-xs"
+                className="text-xs resize-none"
               />
             </div>
 
@@ -550,55 +518,50 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
               size="sm"
               disabled={isSaving === "featured"}
               onClick={handleSaveFeatured}
-              className="w-full text-xs h-9 bg-neutral-900 text-white hover:bg-neutral-800 gap-1.5"
+              className="w-full text-xs h-9 bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer"
             >
               {isSaving === "featured" ? (
-                <>
+                <span className="flex items-center gap-1.5">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
-                </>
+                </span>
               ) : (
-                <>
-                  <Sparkles className="w-3.5 h-3.5" /> Save Featured Content
-                </>
+                "Save Featured Content"
               )}
             </Button>
           </CardContent>
         </Card>
 
-        {/* ─── 3. Mid-Page Editorial Banner ─── */}
-        <Card className="shadow-xs border-neutral-200">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-bold flex items-center gap-2 text-neutral-900">
-                <span className="w-5 h-5 rounded-full bg-neutral-900 text-white text-[11px] flex items-center justify-center font-mono">
-                  3
-                </span>
+        {/* Mid-Page Editorial Banner */}
+        <Card className="shadow-2xs border-neutral-200/90 bg-white">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-sm font-semibold text-neutral-900">
                 Mid-Page Editorial Banner
               </CardTitle>
               {savedSection === "editorial" && (
                 <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
-                  <Check className="w-3.5 h-3.5" /> Saved & Live
+                  <Check className="w-3.5 h-3.5" /> Saved
                 </span>
               )}
             </div>
-            <CardDescription className="text-xs">
-              Wide cinematic editorial photo with left-aligned statement (&quot;Elegance in every detail&quot;).
+            <CardDescription className="text-xs text-neutral-500">
+              Wide cinematic editorial photo with left-aligned statement.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 pt-1">
+          <CardContent className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-neutral-800 block mb-1">
+              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
                 Headline
               </label>
               <Input
                 value={editorialHeadline}
                 onChange={(e) => setEditorialHeadline(e.target.value)}
-                className="text-xs h-9 font-medium"
+                className="text-xs h-9"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-neutral-800 block mb-1">
+              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
                 Subtitle
               </label>
               <Input
@@ -608,53 +571,47 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
               />
             </div>
 
-            {/* Cloudinary Image Uploader */}
             {renderImageUploader("editorial", editorialImage, setEditorialImage, "Editorial Photography")}
 
             <Button
               size="sm"
               disabled={isSaving === "editorial"}
               onClick={handleSaveEditorial}
-              className="w-full text-xs h-9 bg-neutral-900 text-white hover:bg-neutral-800 gap-1.5"
+              className="w-full text-xs h-9 bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer"
             >
               {isSaving === "editorial" ? (
-                <>
+                <span className="flex items-center gap-1.5">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
-                </>
+                </span>
               ) : (
-                <>
-                  <Sparkles className="w-3.5 h-3.5" /> Save Editorial Banner
-                </>
+                "Save Editorial Banner"
               )}
             </Button>
           </CardContent>
         </Card>
 
-        {/* ─── 4. Brand Story Section ─── */}
-        <Card className="shadow-xs border-neutral-200">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-bold flex items-center gap-2 text-neutral-900">
-                <span className="w-5 h-5 rounded-full bg-neutral-900 text-white text-[11px] flex items-center justify-center font-mono">
-                  4
-                </span>
+        {/* Brand Story Section */}
+        <Card className="shadow-2xs border-neutral-200/90 bg-white">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-sm font-semibold text-neutral-900">
                 Brand Craftsmanship Story
               </CardTitle>
               {savedSection === "story" && (
                 <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
-                  <Check className="w-3.5 h-3.5" /> Saved & Live
+                  <Check className="w-3.5 h-3.5" /> Saved
                 </span>
               )}
             </div>
-            <CardDescription className="text-xs">
-              The split narrative section detailing studio intention, craftsmanship, and materials.
+            <CardDescription className="text-xs text-neutral-500">
+              Split narrative section detailing studio intention and craftsmanship.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 pt-1">
+          <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                  Story Eyebrow
+                <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                  Story Label
                 </label>
                 <Input
                   value={storyEyebrow}
@@ -663,7 +620,7 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-neutral-800 block mb-1">
+                <label className="text-xs font-medium text-neutral-700 block mb-1.5">
                   Story Headline
                 </label>
                 <Input
@@ -675,86 +632,80 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                Paragraph 1 (Studio Process)
+              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                Studio Process
               </label>
               <Textarea
                 value={storyP1}
                 onChange={(e) => setStoryP1(e.target.value)}
                 rows={2}
-                className="text-xs"
+                className="text-xs resize-none"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                Paragraph 2 (Philosophy)
+              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                Philosophy
               </label>
               <Textarea
                 value={storyP2}
                 onChange={(e) => setStoryP2(e.target.value)}
                 rows={2}
-                className="text-xs"
+                className="text-xs resize-none"
               />
             </div>
 
-            {/* Cloudinary Image Uploader */}
             {renderImageUploader("story", storyImage, setStoryImage, "Craft Story Photography")}
 
             <Button
               size="sm"
               disabled={isSaving === "story"}
               onClick={handleSaveStory}
-              className="w-full text-xs h-9 bg-neutral-900 text-white hover:bg-neutral-800 gap-1.5"
+              className="w-full text-xs h-9 bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer"
             >
               {isSaving === "story" ? (
-                <>
+                <span className="flex items-center gap-1.5">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
-                </>
+                </span>
               ) : (
-                <>
-                  <Sparkles className="w-3.5 h-3.5" /> Save Story Section
-                </>
+                "Save Story Section"
               )}
             </Button>
           </CardContent>
         </Card>
 
-        {/* ─── 5. Bottom Editorial Banner ─── */}
-        <Card className="shadow-xs border-neutral-200 lg:col-span-2">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-bold flex items-center gap-2 text-neutral-900">
-                <span className="w-5 h-5 rounded-full bg-neutral-900 text-white text-[11px] flex items-center justify-center font-mono">
-                  5
-                </span>
+        {/* Bottom Editorial Banner */}
+        <Card className="shadow-2xs border-neutral-200/90 bg-white lg:col-span-2">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-sm font-semibold text-neutral-900">
                 Bottom Editorial Banner
               </CardTitle>
               {savedSection === "bottom-banner" && (
                 <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
-                  <Check className="w-3.5 h-3.5" /> Saved & Live
+                  <Check className="w-3.5 h-3.5" /> Saved
                 </span>
               )}
             </div>
-            <CardDescription className="text-xs">
-              Wide cinematic closing banner (&quot;Emotion embraces technique&quot;) right above the footer.
+            <CardDescription className="text-xs text-neutral-500">
+              Wide cinematic closing banner right above the footer.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 pt-1">
+          <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-neutral-800 block mb-1">
+                <label className="text-xs font-medium text-neutral-700 block mb-1.5">
                   Headline
                 </label>
                 <Input
                   value={bottomHeadline}
                   onChange={(e) => setBottomHeadline(e.target.value)}
-                  className="text-xs h-9 font-medium"
+                  className="text-xs h-9"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-neutral-800 block mb-1">
+                <label className="text-xs font-medium text-neutral-700 block mb-1.5">
                   Subtitle
                 </label>
                 <Input
@@ -765,28 +716,26 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
               </div>
             </div>
 
-            {/* Cloudinary Image Uploader */}
-            {renderImageUploader("bottom-banner", bottomImage, setBottomImage, "Bottom Banner Photography")}
+            <div className="max-w-xl">
+              {renderImageUploader("bottom-banner", bottomImage, setBottomImage, "Bottom Banner Photography")}
+            </div>
 
             <Button
               size="sm"
               disabled={isSaving === "bottom-banner"}
               onClick={handleSaveBottom}
-              className="w-full text-xs h-9 bg-neutral-900 text-white hover:bg-neutral-800 gap-1.5"
+              className="w-full md:w-auto md:min-w-52 text-xs h-9 bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer"
             >
               {isSaving === "bottom-banner" ? (
-                <>
+                <span className="flex items-center gap-1.5">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
-                </>
+                </span>
               ) : (
-                <>
-                  <Sparkles className="w-3.5 h-3.5" /> Save Bottom Banner
-                </>
+                "Save Bottom Banner"
               )}
             </Button>
           </CardContent>
         </Card>
-
       </div>
     </div>
   );
