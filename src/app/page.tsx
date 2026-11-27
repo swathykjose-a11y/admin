@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AdminHeader } from "@/components/layout/admin-header";
@@ -81,8 +81,10 @@ export default function AdminDashboardPage() {
     null,
   );
   const [showQrModal, setShowQrModal] = useState(false);
+  const knownOrderIdsRef = useRef<Set<string>>(new Set());
+  const hasInitialLoadedRef = useRef(false);
 
-  const loadData = async (showToast = false) => {
+  const loadData = useCallback(async (showToast = false) => {
     setIsLoading(true);
     try {
       const [ordersRes, productsRes, paymentsRes] = await Promise.all([
@@ -97,6 +99,10 @@ export default function AdminDashboardPage() {
       setIsBackendConnected(
         ordersRes.isLive || productsRes.isLive || paymentsRes.isLive,
       );
+
+      knownOrderIdsRef.current = new Set(ordersRes.orders.map((o) => o.id));
+      hasInitialLoadedRef.current = true;
+
       if (showToast) {
         toast.success("Storefront data synced");
       }
@@ -108,11 +114,69 @@ export default function AdminDashboardPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  // Silent background poll for instant new order visibility + toast notification
+  const pollNewOrders = useCallback(async () => {
+    if (!hasInitialLoadedRef.current) return;
+    if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+
+    try {
+      const [ordersRes, paymentsRes] = await Promise.all([
+        adminApi.getOrders(),
+        adminApi.getPaymentOverview(),
+      ]);
+
+      if (!ordersRes.isLive) return;
+
+      const newOrders = ordersRes.orders.filter(
+        (o) => !knownOrderIdsRef.current.has(o.id),
+      );
+
+      if (newOrders.length > 0) {
+        for (const o of newOrders) {
+          knownOrderIdsRef.current.add(o.id);
+          toast.success(`New Order ${o.orderNumber}`, {
+            description: `₹${Number(o.total).toLocaleString("en-IN")} from ${o.customerFirstName} ${o.customerLastName} — Verify payment`,
+            duration: 10000,
+            action: {
+              label: "Verify",
+              onClick: () => {
+                handleSelectTab("payments");
+                setVerifyModalOrder(o);
+              },
+            },
+          });
+        }
+      }
+
+      setOrders(ordersRes.orders);
+      setPaymentOverview(paymentsRes.overview);
+    } catch {
+      // ignore transient poll failures
+    }
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
+
+  useEffect(() => {
+    const interval = setInterval(pollNewOrders, 4000);
+    const onFocusOrVisible = () => {
+      if (document.visibilityState === "visible") {
+        pollNewOrders();
+      }
+    };
+    window.addEventListener("focus", onFocusOrVisible);
+    document.addEventListener("visibilitychange", onFocusOrVisible);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", onFocusOrVisible);
+      document.removeEventListener("visibilitychange", onFocusOrVisible);
+    };
+  }, [pollNewOrders]);
 
   const handleUpdateOrder = async (
     orderId: string,
