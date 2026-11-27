@@ -225,11 +225,21 @@ export function ProductsView({
 
                   <TableCell className="font-mono">
                     <span className="font-semibold">
-                      ₹{Number(prod.minPrice).toFixed(0)}
+                      ₹{Number(
+                        (prod as any).priceRange?.minVariantPrice?.amount ??
+                          prod.minPrice ??
+                          (prod.variants?.[0]?.price as any)?.amount ??
+                          prod.variants?.[0]?.price ??
+                          0,
+                      ).toFixed(0)}
                     </span>
-                    {prod.compareAtPrice && (
+                    {((prod as any).compareAtPriceRange?.minVariantPrice?.amount ||
+                      prod.compareAtPrice) && (
                       <span className="text-muted-foreground line-through ml-1.5 text-[11px]">
-                        ₹{Number(prod.compareAtPrice).toFixed(0)}
+                        ₹{Number(
+                          (prod as any).compareAtPriceRange?.minVariantPrice
+                            ?.amount ?? prod.compareAtPrice,
+                        ).toFixed(0)}
                       </span>
                     )}
                   </TableCell>
@@ -257,8 +267,17 @@ export function ProductsView({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-neutral-500 hover:text-red-600"
-                      onClick={() => onDeleteProduct(prod.id)}
+                      className="h-8 w-8 text-neutral-500 hover:text-red-600 hover:bg-red-50"
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            `Are you sure you want to delete "${prod.title}"? It will be removed immediately from both the catalog and the live storefront.`,
+                          )
+                        ) {
+                          onDeleteProduct(prod.id);
+                        }
+                      }}
+                      title="Delete product"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
