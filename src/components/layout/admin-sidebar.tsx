@@ -185,8 +185,8 @@ export function AdminSidebar({
           </div>
         </div>
 
-        {/* User Footer (Clean: without the Server API status pill) */}
-        <div className="p-3 border-t bg-neutral-50/60">
+        {/* User Footer */}
+        <div className="p-3 border-t bg-neutral-50/60 space-y-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-7 h-7 rounded-full bg-neutral-200 text-neutral-700 flex items-center justify-center text-xs font-semibold shrink-0">
@@ -211,6 +211,20 @@ export function AdminSidebar({
             >
               <LogOut className="w-4 h-4" />
             </Button>
+          </div>
+
+          <div className="pt-2 border-t border-neutral-200/60 text-center">
+            <p className="text-[11px] text-neutral-400">
+              Developed by{" "}
+              <a
+                href="https://kairosartifex.site"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-neutral-600 hover:text-neutral-900 underline underline-offset-2 transition-colors"
+              >
+                Kairos
+              </a>
+            </p>
           </div>
         </div>
       </aside>

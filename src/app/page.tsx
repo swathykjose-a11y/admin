@@ -285,6 +285,19 @@ export default function AdminDashboardPage() {
             </>
           )}
         </main>
+
+        {/* Dashboard Footer */}
+        <footer className="py-4 text-center text-xs text-neutral-400 border-t border-neutral-200/50">
+          Developed by{" "}
+          <a
+            href="https://kairosartifex.site"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-neutral-600 hover:text-neutral-900 underline underline-offset-2 transition-colors"
+          >
+            Kairos
+          </a>
+        </footer>
       </div>
 
       {/* Global Payment Verify Dialog */}
