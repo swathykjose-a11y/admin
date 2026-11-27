@@ -11,6 +11,13 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Dainty Dazzle - Admin & Dropship Hub",
   description: "Dropshipping order fulfillment, catalog & homepage CMS management",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
