@@ -249,7 +249,7 @@ export const adminApi = {
   },
 
   // CMS
-  async getCMS(section: "hero" | "featured" | "editorial" | "story"): Promise<{
+  async getCMS(section: "hero" | "featured" | "editorial" | "story" | "bottom-banner"): Promise<{
     data: any;
     isLive: boolean;
   }> {
@@ -261,7 +261,7 @@ export const adminApi = {
   },
 
   async updateCMS(
-    section: "hero" | "featured" | "editorial" | "story",
+    section: "hero" | "featured" | "editorial" | "story" | "bottom-banner",
     data: any,
   ): Promise<boolean> {
     const res = await adminFetch<{ success: boolean }>(

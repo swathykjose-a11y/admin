@@ -166,7 +166,7 @@ export default function AdminDashboardPage() {
   };
 
   const handleSaveCms = async (
-    section: "hero" | "featured" | "editorial" | "story",
+    section: "hero" | "featured" | "editorial" | "story" | "bottom-banner",
     data: any,
   ) => {
     return await adminApi.updateCMS(section, data);
