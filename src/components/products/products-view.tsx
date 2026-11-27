@@ -37,6 +37,8 @@ import {
   IndianRupee,
   Link as LinkIcon,
   FolderPlus,
+  Eye,
+  ShoppingBag,
 } from "lucide-react";
 import { adminApi } from "@/lib/api";
 
@@ -434,422 +436,511 @@ export function ProductsView({
         </Table>
       </div>
 
-      {/* ─── Impeccable Craft: Add Product Modal ─── */}
+      {/* ─── Impeccable Craft: Add Product Studio Modal ─── */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto p-0 gap-0 rounded-2xl border bg-white shadow-xl">
+        <DialogContent className="w-[95vw] sm:max-w-4xl lg:max-w-5xl max-h-[90vh] p-0 gap-0 rounded-2xl border bg-white shadow-2xl flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="px-6 pt-6 pb-4 border-b bg-neutral-50/50">
-            <div className="flex items-center gap-2 mb-1">
-              <Badge variant="outline" className="text-[10px] uppercase font-semibold text-neutral-600 border-neutral-300">
-                Jewelry Catalog
-              </Badge>
-              <span className="text-neutral-300">•</span>
-              <span className="text-xs text-neutral-500 font-medium">New Listing</span>
+          <div className="px-7 py-4.5 border-b bg-neutral-50/60 shrink-0 flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-semibold text-neutral-600 border-neutral-300">
+                  Jewelry Catalog
+                </Badge>
+                <span className="text-neutral-300">•</span>
+                <span className="text-xs text-neutral-500 font-medium">Product Studio</span>
+              </div>
+              <DialogTitle className="text-xl font-bold tracking-tight text-neutral-900">
+                Add New Product
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                Publish handcrafted pieces with instant category routing and Cloudinary CDN optimization.
+              </DialogDescription>
             </div>
-            <DialogTitle className="text-xl font-bold tracking-tight text-neutral-900">
-              Add New Product
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-              Publish handcrafted pieces with instant category routing and Cloudinary CDN optimization.
-            </DialogDescription>
           </div>
 
-          <form onSubmit={handleCreate} className="p-6 space-y-6">
-            {/* ─── Section 1: Product Identity & Category ─── */}
-            <div className="space-y-4">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5" />
-                1. General Information & Category
-              </h4>
+          <form onSubmit={handleCreate} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            {/* Scrollable Form Body with 2-Column Studio Grid */}
+            <div className="flex-1 overflow-y-auto p-6 lg:p-7">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
+                
+                {/* ─── LEFT COLUMN (col-span-7): Core Information & Pricing ─── */}
+                <div className="lg:col-span-7 space-y-6">
+                  {/* Section 1: General Details */}
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5" />
+                      1. General Information
+                    </h4>
 
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                    Product Title <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    placeholder="e.g. Celestial Freshwater Pearl Choker"
-                    value={title}
-                    onChange={(e) => handleTitleChange(e.target.value)}
-                    required
-                    className="text-xs h-9.5 rounded-lg border-neutral-200 focus-visible:ring-neutral-900"
-                  />
-                </div>
+                    <div className="space-y-3.5">
+                      <div>
+                        <label className="text-xs font-semibold text-neutral-800 block mb-1">
+                          Product Title <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                          placeholder="e.g. Celestial Freshwater Pearl Choker"
+                          value={title}
+                          onChange={(e) => handleTitleChange(e.target.value)}
+                          required
+                          className="text-xs h-10 rounded-lg border-neutral-200 focus-visible:ring-neutral-900"
+                        />
+                      </div>
 
-                <div>
-                  <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                    URL Slug
-                  </label>
-                  <div className="flex rounded-lg border border-neutral-200 overflow-hidden bg-neutral-50/60 focus-within:border-neutral-900 focus-within:ring-1 focus-within:ring-neutral-900">
-                    <span className="text-[11px] text-neutral-500 px-3 py-2 border-r bg-neutral-100/70 font-mono flex items-center">
-                      /products/
-                    </span>
-                    <input
-                      type="text"
-                      placeholder="celestial-freshwater-pearl-choker"
-                      value={handle}
-                      onChange={(e) => setHandle(e.target.value)}
-                      className="flex-1 px-3 py-2 text-xs font-mono bg-transparent outline-none text-neutral-900"
-                    />
+                      <div>
+                        <label className="text-xs font-semibold text-neutral-800 block mb-1">
+                          URL Slug / Handle
+                        </label>
+                        <div className="flex rounded-lg border border-neutral-200 overflow-hidden bg-neutral-50/60 focus-within:border-neutral-900 focus-within:ring-1 focus-within:ring-neutral-900">
+                          <span className="text-[11px] text-neutral-500 px-3 py-2 border-r bg-neutral-100/70 font-mono flex items-center">
+                            /products/
+                          </span>
+                          <input
+                            type="text"
+                            placeholder="celestial-freshwater-pearl-choker"
+                            value={handle}
+                            onChange={(e) => setHandle(e.target.value)}
+                            className="flex-1 px-3 py-2 text-xs font-mono bg-transparent outline-none text-neutral-900"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Category Selection */}
+                      <div className="pt-1">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="text-xs font-semibold text-neutral-800">
+                            Store Category <span className="text-red-500">*</span>
+                          </label>
+                          {!isAddingCategory && (
+                            <button
+                              type="button"
+                              onClick={() => setIsAddingCategory(true)}
+                              className="text-[11px] text-neutral-600 hover:text-neutral-950 font-medium flex items-center gap-1 cursor-pointer transition-colors"
+                            >
+                              <FolderPlus className="w-3.5 h-3.5" />
+                              + New Category
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Category Chips */}
+                        <div className="flex flex-wrap gap-2">
+                          {categories.map((cat) => {
+                            const isSelected = selectedCategory === cat;
+                            return (
+                              <button
+                                key={cat}
+                                type="button"
+                                onClick={() => setSelectedCategory(cat)}
+                                className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                                  isSelected
+                                    ? "bg-neutral-900 text-white border-neutral-900 shadow-2xs"
+                                    : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50"
+                              }`}
+                              >
+                                {isSelected && <Check className="w-3 h-3 text-white" />}
+                                {cat}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Inline New Category Creator */}
+                        {isAddingCategory && (
+                          <div className="mt-2.5 p-3 rounded-xl border border-neutral-200 bg-neutral-50/70 space-y-2">
+                            <p className="text-[11px] font-semibold text-neutral-700">Add Custom Category</p>
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="e.g. Chokers, Pendants, Bangles..."
+                                value={newCategoryName}
+                                onChange={(e) => setNewCategoryName(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    handleAddNewCategory();
+                                  }
+                                }}
+                                className="text-xs h-8.5 bg-white flex-1"
+                                autoFocus
+                              />
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => handleAddNewCategory()}
+                                className="h-8.5 px-3 text-xs bg-neutral-900 text-white"
+                              >
+                                Add
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setIsAddingCategory(false);
+                                  setNewCategoryName("");
+                                }}
+                                className="h-8.5 px-2 text-xs text-neutral-500"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground">
+                              Products will automatically link to this category's collection page.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 2: Pricing & Inventory */}
+                  <div className="space-y-4 pt-3 border-t">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                      <IndianRupee className="w-3.5 h-3.5" />
+                      2. Pricing & Inventory
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                      <div>
+                        <label className="text-xs font-semibold text-neutral-800 block mb-1">
+                          Selling Price (₹) <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-2.5 top-2.5 text-xs text-neutral-500 font-semibold">₹</span>
+                          <Input
+                            type="number"
+                            placeholder="999"
+                            value={minPrice}
+                            onChange={(e) => setMinPrice(e.target.value)}
+                            required
+                            className="text-xs h-9.5 pl-6.5 font-mono font-medium rounded-lg"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-xs font-semibold text-neutral-800">
+                            Compare At (₹)
+                          </label>
+                          {discountPercent && (
+                            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded">
+                              -{discountPercent}%
+                            </span>
+                          )}
+                        </div>
+                        <div className="relative">
+                          <span className="absolute left-2.5 top-2.5 text-xs text-neutral-400 font-semibold">₹</span>
+                          <Input
+                            type="number"
+                            placeholder="1499"
+                            value={compareAtPrice}
+                            onChange={(e) => setCompareAtPrice(e.target.value)}
+                            className="text-xs h-9.5 pl-6.5 font-mono rounded-lg"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-neutral-800 block mb-1">
+                          Stock Quantity
+                        </label>
+                        <Input
+                          type="number"
+                          placeholder="25"
+                          value={stock}
+                          onChange={(e) => setStock(e.target.value)}
+                          className="text-xs h-9.5 font-mono rounded-lg"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 3: Story & Metadata */}
+                  <div className="space-y-4 pt-3 border-t">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5" />
+                      3. Story & Metadata
+                    </h4>
+
+                    <div className="space-y-3.5">
+                      <div>
+                        <label className="text-xs font-semibold text-neutral-800 block mb-1">
+                          Tags (Comma separated)
+                        </label>
+                        <Input
+                          placeholder="gold, 18k, minimalist, bestseller"
+                          value={tags}
+                          onChange={(e) => setTags(e.target.value)}
+                          className="text-xs h-9.5 rounded-lg"
+                        />
+                        {/* Quick tag suggestions */}
+                        <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                          <span className="text-[10px] text-neutral-400">Quick add:</span>
+                          {SUGGESTED_TAGS.map((st) => (
+                            <button
+                              key={st}
+                              type="button"
+                              onClick={() => handleAddTag(st)}
+                              className="text-[10px] font-mono bg-neutral-100 hover:bg-neutral-200 text-neutral-700 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                            >
+                              +{st}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-neutral-800 block mb-1">
+                          Description & Craft Notes
+                        </label>
+                        <Textarea
+                          placeholder="Handcrafted with precision. Minimalist 18k gold vermeil designed for everyday elegance..."
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          rows={3}
+                          className="text-xs rounded-lg resize-none"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Category Chips Selector */}
-                <div className="pt-1">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-neutral-800">
-                      Store Category <span className="text-red-500">*</span>
-                    </label>
-                    {!isAddingCategory && (
-                      <button
-                        type="button"
-                        onClick={() => setIsAddingCategory(true)}
-                        className="text-[11px] text-neutral-600 hover:text-neutral-950 font-medium flex items-center gap-1 cursor-pointer transition-colors"
-                      >
-                        <FolderPlus className="w-3.5 h-3.5" />
-                        + New Category
-                      </button>
-                    )}
-                  </div>
+                {/* ─── RIGHT COLUMN (col-span-5): Media Upload & Live Storefront Preview ─── */}
+                <div className="lg:col-span-5 space-y-6">
+                  {/* Media Upload Card */}
+                  <div className="p-4 rounded-xl border border-neutral-200 bg-neutral-50/50 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-500 flex items-center gap-1.5">
+                        <ImageIcon className="w-3.5 h-3.5" />
+                        Product Media
+                      </h4>
 
-                  {/* Category Chips */}
-                  <div className="flex flex-wrap gap-2">
-                    {categories.map((cat) => {
-                      const isSelected = selectedCategory === cat;
-                      return (
+                      <div className="flex rounded-md border border-neutral-200 p-0.5 bg-neutral-100 text-[11px]">
                         <button
-                          key={cat}
                           type="button"
-                          onClick={() => setSelectedCategory(cat)}
-                          className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
-                            isSelected
-                              ? "bg-neutral-900 text-white border-neutral-900 shadow-2xs"
-                              : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50"
+                          onClick={() => setImageTab("upload")}
+                          className={`px-2.5 py-0.5 rounded font-medium transition-colors cursor-pointer ${
+                            imageTab === "upload" ? "bg-white text-neutral-900 shadow-2xs" : "text-neutral-600 hover:text-neutral-900"
                           }`}
                         >
-                          {isSelected && <Check className="w-3 h-3 text-white" />}
-                          {cat}
+                          Upload File
                         </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Inline New Category Creator */}
-                  {isAddingCategory && (
-                    <div className="mt-2.5 p-3 rounded-xl border border-neutral-200 bg-neutral-50/70 space-y-2">
-                      <p className="text-[11px] font-semibold text-neutral-700">Add Custom Category</p>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="e.g. Chokers, Pendants, Bangles..."
-                          value={newCategoryName}
-                          onChange={(e) => setNewCategoryName(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              handleAddNewCategory();
-                            }
-                          }}
-                          className="text-xs h-8.5 bg-white flex-1"
-                          autoFocus
-                        />
-                        <Button
+                        <button
                           type="button"
-                          size="sm"
-                          onClick={() => handleAddNewCategory()}
-                          className="h-8.5 px-3 text-xs bg-neutral-900 text-white"
+                          onClick={() => setImageTab("url")}
+                          className={`px-2.5 py-0.5 rounded font-medium transition-colors cursor-pointer ${
+                            imageTab === "url" ? "bg-white text-neutral-900 shadow-2xs" : "text-neutral-600 hover:text-neutral-900"
+                          }`}
                         >
-                          Add
-                        </Button>
+                          Paste URL
+                        </button>
+                      </div>
+                    </div>
+
+                    {imageTab === "upload" ? (
+                      <div>
+                        <label className="block cursor-pointer">
+                          <div
+                            className={`border-2 border-dashed rounded-xl p-4 text-center transition-all ${
+                              isUploadingImage
+                                ? "border-neutral-400 bg-neutral-50"
+                                : "border-neutral-200 hover:border-neutral-400 hover:bg-white bg-white/70"
+                            }`}
+                          >
+                            {isUploadingImage ? (
+                              <div className="flex flex-col items-center justify-center gap-2 py-3">
+                                <Loader2 className="w-6 h-6 animate-spin text-neutral-800" />
+                                <p className="text-xs font-semibold text-neutral-800">
+                                  Uploading to Cloudinary CDN...
+                                </p>
+                                <p className="text-[11px] text-muted-foreground">
+                                  Auto AVIF/WebP optimization
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center justify-center gap-1 py-2">
+                                <div className="w-9 h-9 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600 mb-0.5">
+                                  <Upload className="w-4 h-4" />
+                                </div>
+                                <p className="text-xs font-semibold text-neutral-800">
+                                  Click to upload image or drag and drop
+                                </p>
+                                <p className="text-[10px] text-muted-foreground">
+                                  PNG, JPG, WebP up to 8MB • Cloudinary CDN
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={isUploadingImage}
+                            onChange={handleFileUpload}
+                          />
+                        </label>
+
+                        {uploadError && (
+                          <div className="mt-2 p-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+                            <X className="w-3.5 h-3.5 shrink-0" />
+                            <span>{uploadError}</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <div className="relative">
+                          <LinkIcon className="w-3.5 h-3.5 absolute left-3 top-3 text-neutral-400" />
+                          <Input
+                            placeholder="Paste image URL (https://res.cloudinary.com/...)"
+                            value={imageUrl}
+                            onChange={(e) => setImageUrl(e.target.value)}
+                            className="text-xs h-9.5 pl-8.5 font-mono text-[11px] rounded-lg bg-white"
+                          />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">
+                          Accepts Cloudinary or HTTPS image links.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Image Confirmation Pill */}
+                    {imageUrl && (
+                      <div className="flex items-center gap-2.5 p-2 bg-white rounded-lg border border-neutral-200">
+                        <img
+                          src={imageUrl}
+                          alt="Thumbnail"
+                          className="w-10 h-10 object-cover rounded bg-neutral-100 border shrink-0"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.2">
+                            {imageUrl.includes("cloudinary") ? "Cloudinary CDN Active" : "External Asset"}
+                          </span>
+                          <p className="text-[10px] font-mono text-neutral-500 truncate mt-0.5">
+                            {imageUrl}
+                          </p>
+                        </div>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => {
-                            setIsAddingCategory(false);
-                            setNewCategoryName("");
-                          }}
-                          className="h-8.5 px-2 text-xs text-neutral-500"
+                          onClick={() => setImageUrl("")}
+                          className="text-[11px] text-neutral-500 hover:text-red-600 hover:bg-red-50 h-7 px-2"
                         >
-                          <X className="w-3.5 h-3.5" />
+                          Remove
                         </Button>
                       </div>
-                      <p className="text-[10px] text-muted-foreground">
-                        Products assigned to this category will automatically be linked to its collection page and navlink.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* ─── Section 2: Pricing & Inventory ─── */}
-            <div className="space-y-4 pt-2 border-t">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
-                <IndianRupee className="w-3.5 h-3.5" />
-                2. Pricing & Inventory
-              </h4>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                <div>
-                  <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                    Selling Price (₹) <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-2.5 top-2.5 text-xs text-neutral-500 font-semibold">₹</span>
-                    <Input
-                      type="number"
-                      placeholder="999"
-                      value={minPrice}
-                      onChange={(e) => setMinPrice(e.target.value)}
-                      required
-                      className="text-xs h-9.5 pl-6.5 font-mono font-medium rounded-lg"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-semibold text-neutral-800">
-                      Compare At Price (₹)
-                    </label>
-                    {discountPercent && (
-                      <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded">
-                        -{discountPercent}%
-                      </span>
                     )}
                   </div>
-                  <div className="relative">
-                    <span className="absolute left-2.5 top-2.5 text-xs text-neutral-400 font-semibold">₹</span>
-                    <Input
-                      type="number"
-                      placeholder="1499"
-                      value={compareAtPrice}
-                      onChange={(e) => setCompareAtPrice(e.target.value)}
-                      className="text-xs h-9.5 pl-6.5 font-mono rounded-lg"
-                    />
-                  </div>
-                </div>
 
-                <div>
-                  <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                    Stock Quantity
-                  </label>
-                  <Input
-                    type="number"
-                    placeholder="25"
-                    value={stock}
-                    onChange={(e) => setStock(e.target.value)}
-                    className="text-xs h-9.5 font-mono rounded-lg"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* ─── Section 3: Product Image (Cloudinary Integration) ─── */}
-            <div className="space-y-3 pt-2 border-t">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
-                  <ImageIcon className="w-3.5 h-3.5" />
-                  3. Product Image
-                </h4>
-
-                <div className="flex rounded-md border border-neutral-200 p-0.5 bg-neutral-100 text-[11px]">
-                  <button
-                    type="button"
-                    onClick={() => setImageTab("upload")}
-                    className={`px-2.5 py-1 rounded font-medium transition-colors cursor-pointer ${
-                      imageTab === "upload" ? "bg-white text-neutral-900 shadow-2xs" : "text-neutral-600 hover:text-neutral-900"
-                    }`}
-                  >
-                    Upload File
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setImageTab("url")}
-                    className={`px-2.5 py-1 rounded font-medium transition-colors cursor-pointer ${
-                      imageTab === "url" ? "bg-white text-neutral-900 shadow-2xs" : "text-neutral-600 hover:text-neutral-900"
-                    }`}
-                  >
-                    Paste URL
-                  </button>
-                </div>
-              </div>
-
-              {imageTab === "upload" ? (
-                <div>
-                  <label className="block cursor-pointer">
-                    <div
-                      className={`border-2 border-dashed rounded-xl p-5 text-center transition-all ${
-                        isUploadingImage
-                          ? "border-neutral-400 bg-neutral-50"
-                          : "border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50/50 bg-white"
-                      }`}
-                    >
-                      {isUploadingImage ? (
-                        <div className="flex flex-col items-center justify-center gap-2 py-2">
-                          <Loader2 className="w-6 h-6 animate-spin text-neutral-800" />
-                          <p className="text-xs font-semibold text-neutral-800">
-                            Uploading to Cloudinary CDN...
-                          </p>
-                          <p className="text-[11px] text-muted-foreground">
-                            Optimizing with auto AVIF/WebP compression
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center gap-1.5 py-1">
-                          <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600 mb-1">
-                            <Upload className="w-5 h-5" />
-                          </div>
-                          <p className="text-xs font-semibold text-neutral-800">
-                            Click to upload image or drag and drop
-                          </p>
-                          <p className="text-[11px] text-muted-foreground">
-                            PNG, JPG, WebP up to 8MB • Stored on Cloudinary CDN
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      disabled={isUploadingImage}
-                      onChange={handleFileUpload}
-                    />
-                  </label>
-
-                  {uploadError && (
-                    <div className="mt-2 p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
-                      <X className="w-4 h-4 shrink-0" />
-                      <span>{uploadError}</span>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  <div className="relative">
-                    <LinkIcon className="w-3.5 h-3.5 absolute left-3 top-3 text-neutral-400" />
-                    <Input
-                      placeholder="Paste image URL (https://res.cloudinary.com/... or https://...)"
-                      value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
-                      className="text-xs h-9.5 pl-8.5 font-mono text-[11px] rounded-lg"
-                    />
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">
-                    Accepts direct HTTPS image URLs or Cloudinary asset links.
-                  </p>
-                </div>
-              )}
-
-              {/* Live Preview Card */}
-              {imageUrl && (
-                <div className="flex items-center gap-3 p-3 bg-neutral-50/80 rounded-xl border border-neutral-200">
-                  <img
-                    src={imageUrl}
-                    alt="Preview"
-                    className="w-14 h-16 object-cover rounded-lg bg-neutral-200 border shadow-2xs"
-                  />
-                  <div className="min-w-0 flex-1 space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100/70 border border-emerald-200 rounded px-1.5 py-0.2">
-                        {imageUrl.includes("cloudinary") ? "Cloudinary CDN Active" : "External Asset"}
+                  {/* Live Storefront Preview Card */}
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5 text-neutral-500" />
+                        Live Storefront Preview
+                      </h4>
+                      <span className="text-[10px] text-neutral-400 font-mono">
+                        daintydazzle.store
                       </span>
                     </div>
-                    <p className="text-[11px] font-mono text-neutral-600 truncate mt-1">
-                      {imageUrl}
-                    </p>
+
+                    <div className="border border-neutral-200 rounded-xl overflow-hidden bg-white shadow-xs transition-all">
+                      {/* Product Image Preview */}
+                      <div className="relative aspect-4/3 w-full bg-neutral-100 overflow-hidden flex items-center justify-center">
+                        {imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt={title || "Preview"}
+                            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-neutral-400 p-4 text-center">
+                            <ShoppingBag className="w-8 h-8 stroke-1 mb-1.5 text-neutral-300" />
+                            <p className="text-[11px] font-medium text-neutral-500">Image will appear here</p>
+                            <p className="text-[10px] text-neutral-400">Upload an image to see live storefront preview</p>
+                          </div>
+                        )}
+                        {/* Floating Category Badge */}
+                        <div className="absolute top-2.5 left-2.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-white/90 backdrop-blur-xs text-neutral-900 px-2 py-0.5 rounded shadow-2xs">
+                            {selectedCategory}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Product Card Details */}
+                      <div className="p-3.5 space-y-2">
+                        <div>
+                          <p className="text-xs font-medium text-neutral-900 line-clamp-1">
+                            {title || "Celestial Freshwater Pearl Choker"}
+                          </p>
+                          <p className="text-[10px] font-mono text-neutral-400 mt-0.5">
+                            /products/{handle || "celestial-freshwater-pearl-choker"}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1 border-t border-neutral-100">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold text-neutral-900">
+                              ₹{minPrice || "999"}
+                            </span>
+                            {compareAtPrice && parseFloat(compareAtPrice) > (parseFloat(minPrice) || 0) && (
+                              <span className="text-[11px] text-neutral-400 line-through">
+                                ₹{compareAtPrice}
+                              </span>
+                            )}
+                            {discountPercent && (
+                              <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1 rounded">
+                                -{discountPercent}%
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-neutral-500 font-mono">
+                            {parseInt(stock, 10) > 0 ? `${stock || 25} in stock` : "Out of stock"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setImageUrl("")}
-                    className="text-xs text-neutral-500 hover:text-red-600 hover:bg-red-50 h-8 px-2.5 rounded-lg"
-                  >
-                    Remove
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {/* ─── Section 4: Details & Tags ─── */}
-            <div className="space-y-4 pt-2 border-t">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
-                <Tag className="w-3.5 h-3.5" />
-                4. Story & Metadata
-              </h4>
-
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                    Tags (Comma separated)
-                  </label>
-                  <Input
-                    placeholder="gold, 18k, minimalist, bestseller"
-                    value={tags}
-                    onChange={(e) => setTags(e.target.value)}
-                    className="text-xs h-9.5 rounded-lg"
-                  />
-                  {/* Quick tag suggestions */}
-                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                    <span className="text-[10px] text-neutral-400">Quick add:</span>
-                    {SUGGESTED_TAGS.map((st) => (
-                      <button
-                        key={st}
-                        type="button"
-                        onClick={() => handleAddTag(st)}
-                        className="text-[10px] font-mono bg-neutral-100 hover:bg-neutral-200 text-neutral-700 px-2 py-0.5 rounded cursor-pointer transition-colors"
-                      >
-                        +{st}
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
-                <div>
-                  <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                    Description & Craft Notes
-                  </label>
-                  <Textarea
-                    placeholder="Handcrafted with precision. Minimalist 18k gold vermeil designed for everyday elegance..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
-                    className="text-xs rounded-lg resize-none"
-                  />
-                </div>
               </div>
             </div>
 
-            {/* Dialog Footer */}
-            <DialogFooter className="gap-2 sm:gap-0 pt-4 border-t">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsAddOpen(false)}
-                className="text-xs h-9 rounded-lg"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting || isUploadingImage}
-                className="text-xs h-9 bg-neutral-900 hover:bg-neutral-800 text-white font-medium rounded-lg px-4 gap-1.5 shadow-2xs cursor-pointer"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Publishing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Publish Product</span>
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
+            {/* Pinned Dialog Footer */}
+            <div className="px-7 py-3.5 border-t bg-neutral-50/80 shrink-0 flex items-center justify-between">
+              <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                Products sync immediately across collections and search.
+              </span>
+              <div className="flex items-center gap-2.5 ml-auto">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsAddOpen(false)}
+                  className="text-xs h-9 rounded-lg"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || isUploadingImage}
+                  className="text-xs h-9 bg-neutral-900 hover:bg-neutral-800 text-white font-medium rounded-lg px-4 gap-1.5 shadow-2xs cursor-pointer"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Publishing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Publish Product</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
           </form>
         </DialogContent>
       </Dialog>
