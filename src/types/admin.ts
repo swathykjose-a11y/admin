@@ -141,6 +141,7 @@ export interface AdminProduct {
   totalInventory: number;
   minPrice: number;
   compareAtPrice?: number;
+  category?: string;
   currency: string;
   tags: string[];
   images: Array<{ url: string; altText: string | null }>;

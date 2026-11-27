@@ -212,6 +212,19 @@ export const adminApi = {
     return res.data?.success ?? false;
   },
 
+  async getCategories(): Promise<Array<{ id: string; handle: string; title: string }>> {
+    const res = await adminFetch<Array<{ id: string; handle: string; title: string }>>(`/api/collections`);
+    if (Array.isArray(res.data) && res.data.length > 0) {
+      return res.data;
+    }
+    return [
+      { id: "col_earrings", handle: "earrings", title: "Earrings" },
+      { id: "col_necklaces", handle: "necklaces", title: "Necklaces" },
+      { id: "col_rings", handle: "rings", title: "Rings" },
+      { id: "col_bracelets", handle: "bracelets", title: "Bracelets" },
+    ];
+  },
+
   // Image Upload (Cloudinary via backend /api/admin/upload)
   async uploadImage(
     fileDataUrl: string,
