@@ -218,7 +218,7 @@ export function PaymentVerifyDialog({
               className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 w-4 h-4"
             />
             <span className="text-xs text-neutral-700">
-              Automatically move order to <strong>Confirmed</strong> for dropship placement
+              Automatically move order to <strong>Confirmed</strong>
             </span>
           </label>
         </div>

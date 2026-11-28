@@ -62,21 +62,22 @@ export function RevenueView({ orders, products = [] }: RevenueViewProps) {
     [filteredOrders],
   );
 
-  const totalSupplierCost = useMemo(
-    () => filteredOrders.reduce((sum, o) => sum + (o.supplierCost || 0), 0),
+  const paidOrders = useMemo(
+    () => filteredOrders.filter((o) => o.paymentStatus === "paid"),
     [filteredOrders],
   );
-
-  const netProfit = grossRevenue - totalSupplierCost;
-  const marginPercentage = grossRevenue > 0 ? (netProfit / grossRevenue) * 100 : 0;
+  const verifiedRevenue = useMemo(
+    () => paidOrders.reduce((sum, o) => sum + (o.total || 0), 0),
+    [paidOrders],
+  );
   const aov = filteredOrders.length > 0 ? grossRevenue / filteredOrders.length : 0;
-  const paidOrdersCount = filteredOrders.filter((o) => o.paymentStatus === "paid").length;
+  const paidOrdersCount = paidOrders.length;
   const paymentSuccessRate =
     filteredOrders.length > 0 ? (paidOrdersCount / filteredOrders.length) * 100 : 100;
 
-  // Chart Data: Timeline Trend (Revenue & Profit over time)
+  // Chart Data: Timeline Trend (Revenue & Verified Paid over time)
   const timelineData = useMemo(() => {
-    const daysMap: Record<string, { date: string; revenue: number; profit: number; cost: number; orders: number }> = {};
+    const daysMap: Record<string, { date: string; revenue: number; profit: number; orders: number }> = {};
 
     // Default last 7 or 14 days if orders are few
     const dayCount = timeRange === "7d" ? 7 : 14;
@@ -84,7 +85,7 @@ export function RevenueView({ orders, products = [] }: RevenueViewProps) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const key = d.toLocaleDateString("en-IN", { month: "short", day: "numeric" });
-      daysMap[key] = { date: key, revenue: 0, profit: 0, cost: 0, orders: 0 };
+      daysMap[key] = { date: key, revenue: 0, profit: 0, orders: 0 };
     }
 
     filteredOrders.forEach((o) => {
@@ -93,13 +94,13 @@ export function RevenueView({ orders, products = [] }: RevenueViewProps) {
         day: "numeric",
       });
       if (!daysMap[dateKey]) {
-        daysMap[dateKey] = { date: dateKey, revenue: 0, profit: 0, cost: 0, orders: 0 };
+        daysMap[dateKey] = { date: dateKey, revenue: 0, profit: 0, orders: 0 };
       }
       const rev = o.total || 0;
-      const cost = o.supplierCost || rev * 0.35; // estimate 35% cost if not entered yet
       daysMap[dateKey].revenue += rev;
-      daysMap[dateKey].cost += cost;
-      daysMap[dateKey].profit += rev - cost;
+      if (o.paymentStatus === "paid") {
+        daysMap[dateKey].profit += rev;
+      }
       daysMap[dateKey].orders += 1;
     });
 
@@ -141,32 +142,23 @@ export function RevenueView({ orders, products = [] }: RevenueViewProps) {
       }));
   }, [filteredOrders]);
 
-  // Product Margins Breakdown
-  const productMargins = useMemo(() => {
+  // Product Sales Breakdown
+  const productSales = useMemo(() => {
     return products.map((p) => {
       const sellingPrice = p.minPrice;
-      const supplierCost = Math.round(sellingPrice * 0.32); // Average dropship cost
-      const margin = sellingPrice - supplierCost;
-      const marginPct = (margin / sellingPrice) * 100;
-      // Count total units sold from orders
       const unitsSold = orders.reduce((sum, o) => {
         const item = (o.items || []).find((i) => i.productId === p.id || i.productHandle === p.handle);
         return sum + (item ? item.quantity : 0);
       }, 0);
       const totalGenerated = unitsSold * sellingPrice;
-      const totalProfit = unitsSold * margin;
 
       return {
         id: p.id,
         title: p.title,
         handle: p.handle,
         sellingPrice,
-        supplierCost,
-        margin,
-        marginPct,
         unitsSold,
         totalGenerated,
-        totalProfit,
       };
     });
   }, [products, orders]);
@@ -178,10 +170,10 @@ export function RevenueView({ orders, products = [] }: RevenueViewProps) {
         <div>
           <h2 className="text-lg font-bold text-neutral-900 tracking-tight flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-neutral-700" />
-            Revenue & Dropship Unit Economics
+            Revenue &amp; Sales Analytics
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Financial analytics, fulfillment costs, and profitability margins
+            Financial analytics, verified UPI collections, and product performance
           </p>
         </div>
 
@@ -239,7 +231,7 @@ export function RevenueView({ orders, products = [] }: RevenueViewProps) {
         <Card>
           <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-              Net Dropship Profit
+              Verified UPI Revenue
             </CardTitle>
             <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
               <TrendingUp className="w-4 h-4" />
@@ -247,10 +239,10 @@ export function RevenueView({ orders, products = [] }: RevenueViewProps) {
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="text-2xl font-bold text-blue-900">
-              ₹{netProfit.toLocaleString("en-IN")}
+              ₹{verifiedRevenue.toLocaleString("en-IN")}
             </div>
             <p className="text-[11px] text-muted-foreground mt-1">
-              After ₹{totalSupplierCost.toLocaleString("en-IN")} supplier costs
+              {paidOrdersCount} verified paid orders
             </p>
           </CardContent>
         </Card>
@@ -258,7 +250,7 @@ export function RevenueView({ orders, products = [] }: RevenueViewProps) {
         <Card>
           <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-              Average Margin
+              Verification Rate
             </CardTitle>
             <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
               <Percent className="w-4 h-4" />
@@ -266,7 +258,7 @@ export function RevenueView({ orders, products = [] }: RevenueViewProps) {
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="text-2xl font-bold text-neutral-900">
-              {marginPercentage.toFixed(1)}%
+              {paymentSuccessRate.toFixed(1)}%
             </div>
             <p className="text-[11px] text-purple-600 font-medium mt-1">
               Target margin: &gt; 60.0%
@@ -303,7 +295,7 @@ export function RevenueView({ orders, products = [] }: RevenueViewProps) {
               Revenue & Profit Timeline
             </CardTitle>
             <CardDescription className="text-xs">
-              Daily gross sales compared against net dropship margin
+              Daily gross sales compared against verified UPI collections
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -428,20 +420,20 @@ export function RevenueView({ orders, products = [] }: RevenueViewProps) {
         </Card>
       </div>
 
-      {/* Dropship Product Margins Table */}
+      {/* Product Sales Table */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-sm font-medium text-neutral-900">
-                Product Profitability & Unit Margins
+                Product Sales Breakdown
               </CardTitle>
               <CardDescription className="text-xs">
-                Per-product selling price, supplier procurement cost, and net margin calculation
+                Per-product selling price, units sold, and total revenue
               </CardDescription>
             </div>
             <Badge variant="outline" className="text-[11px] font-mono">
-              {productMargins.length} Products Monitored
+              {productSales.length} Products
             </Badge>
           </div>
         </CardHeader>
@@ -451,15 +443,12 @@ export function RevenueView({ orders, products = [] }: RevenueViewProps) {
               <TableRow className="text-[11px] uppercase tracking-wider bg-neutral-50/70">
                 <TableHead>Product Title</TableHead>
                 <TableHead className="text-right">Selling Price</TableHead>
-                <TableHead className="text-right">Supplier Cost</TableHead>
-                <TableHead className="text-right">Net Margin</TableHead>
-                <TableHead className="text-right">Margin Rate</TableHead>
                 <TableHead className="text-right">Units Sold</TableHead>
-                <TableHead className="text-right">Total Profit</TableHead>
+                <TableHead className="text-right">Total Revenue</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {productMargins.map((item) => (
+              {productSales.map((item) => (
                 <TableRow key={item.id} className="text-xs">
                   <TableCell className="font-medium text-neutral-900">
                     {item.title}
@@ -467,29 +456,11 @@ export function RevenueView({ orders, products = [] }: RevenueViewProps) {
                   <TableCell className="text-right font-mono">
                     ₹{item.sellingPrice.toLocaleString("en-IN")}
                   </TableCell>
-                  <TableCell className="text-right font-mono text-muted-foreground">
-                    ₹{item.supplierCost.toLocaleString("en-IN")}
-                  </TableCell>
-                  <TableCell className="text-right font-mono font-medium text-emerald-600">
-                    ₹{item.margin.toLocaleString("en-IN")}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] font-mono ${
-                        item.marginPct >= 65
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          : "bg-blue-50 text-blue-700 border-blue-200"
-                      }`}
-                    >
-                      {item.marginPct.toFixed(0)}%
-                    </Badge>
-                  </TableCell>
                   <TableCell className="text-right font-mono text-neutral-600">
                     {item.unitsSold}
                   </TableCell>
                   <TableCell className="text-right font-mono font-bold text-neutral-900">
-                    ₹{item.totalProfit.toLocaleString("en-IN")}
+                    ₹{item.totalGenerated.toLocaleString("en-IN")}
                   </TableCell>
                 </TableRow>
               ))}

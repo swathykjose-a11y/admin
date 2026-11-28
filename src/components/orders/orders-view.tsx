@@ -110,16 +110,9 @@ export function OrdersView({
         );
       case "confirmed":
         return (
-          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-300 gap-1 text-[11px]">
-            <AlertCircle className="w-3 h-3" />
-            Needs Ordering
-          </Badge>
-        );
-      case "ordered_from_supplier":
-        return (
           <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-300 gap-1 text-[11px]">
-            <Clock className="w-3 h-3" />
-            Ordered from Supplier
+            <CheckCircle2 className="w-3 h-3" />
+            Confirmed
           </Badge>
         );
       case "shipped":
@@ -171,10 +164,10 @@ export function OrdersView({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <CardTitle className="text-base font-bold">
-                Orders & Dropship Fulfillment
+                Orders &amp; Fulfillment
               </CardTitle>
               <CardDescription className="text-xs">
-                Manage incoming orders, supplier procurement, and tracking numbers
+                Manage incoming orders, payment verification, and courier tracking
               </CardDescription>
             </div>
 
@@ -208,10 +201,9 @@ export function OrdersView({
                 { key: "all", label: `All (${orders.length})` },
                 {
                   key: "confirmed",
-                  label: `Needs Supplier (${needsDropshipCount})`,
+                  label: `Ready to Ship (${needsDropshipCount})`,
                   highlight: needsDropshipCount > 0,
                 },
-                { key: "ordered_from_supplier", label: "Ordered" },
                 { key: "shipped", label: "Shipped" },
                 { key: "delivered", label: "Delivered" },
               ].map((f) => (
@@ -265,7 +257,7 @@ export function OrdersView({
                   <TableHead className="text-xs font-semibold">Ordered Items</TableHead>
                   <TableHead className="text-xs font-semibold">Retail & Payment</TableHead>
                   <TableHead className="text-xs font-semibold">Fulfillment</TableHead>
-                  <TableHead className="text-xs font-semibold">Supplier / Profit</TableHead>
+                  <TableHead className="text-xs font-semibold">Tracking</TableHead>
                   <TableHead className="text-xs font-semibold text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -376,32 +368,21 @@ export function OrdersView({
                           {getStatusBadge(order.status)}
                         </TableCell>
 
-                        {/* Supplier & Profit */}
+                        {/* Tracking */}
                         <TableCell>
-                          {supplierCostNum > 0 ? (
-                            <div className="space-y-0.5 text-xs">
-                              <span className="text-[11px] text-muted-foreground block">
-                                Cost: ₹{supplierCostNum}
-                              </span>
-                              <span className="text-emerald-700 font-semibold font-mono text-xs flex items-center gap-0.5">
-                                <TrendingUp className="w-3 h-3" />
-                                +₹{profitNum.toFixed(0)}
-                              </span>
-                              {order.courierTrackingNumber && (
-                                <a
-                                  href={order.courierTrackingUrl || "#"}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
-                                >
-                                  <Truck className="w-2.5 h-2.5" />
-                                  {order.courierTrackingNumber}
-                                </a>
-                              )}
-                            </div>
+                          {order.courierTrackingNumber ? (
+                            <a
+                              href={order.courierTrackingUrl || "#"}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 hover:underline flex items-center gap-1 font-mono"
+                            >
+                              <Truck className="w-3 h-3" />
+                              {order.courierTrackingNumber}
+                            </a>
                           ) : (
                             <span className="text-xs text-muted-foreground">
-                              Not ordered yet
+                              Not shipped yet
                             </span>
                           )}
                         </TableCell>

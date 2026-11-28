@@ -10,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Dainty Dazzle - Admin & Dropship Hub",
-  description: "Dropshipping order fulfillment, catalog & homepage CMS management",
+  title: "Dainty Dazzle - Admin Hub",
+  description: "Order fulfillment, catalog & homepage CMS management",
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },

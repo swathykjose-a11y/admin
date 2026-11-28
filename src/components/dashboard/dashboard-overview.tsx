@@ -54,26 +54,24 @@ export function DashboardOverview({
     [orders],
   );
 
-  const totalSupplierCost = useMemo(
-    () => orders.reduce((sum, o) => sum + (Number(o.supplierCost) || 0), 0),
-    [orders],
+  const paidOrders = orders.filter((o) => o.paymentStatus === "paid");
+  const paidRevenue = useMemo(
+    () => paidOrders.reduce((sum, o) => sum + (o.total || 0), 0),
+    [paidOrders],
   );
-
-  const netProfit = totalRevenue - totalSupplierCost;
-  const profitMarginPercent = totalRevenue > 0
-    ? Math.round((netProfit / totalRevenue) * 100)
+  const paidRatePercent = orders.length > 0
+    ? Math.round((paidOrders.length / orders.length) * 100)
     : 0;
 
   // Status Metrics
   const pendingPayments = orders.filter((o) => o.paymentStatus === "pending");
-  const needsDropship = orders.filter((o) => o.status === "confirmed");
-  const orderedSupplier = orders.filter((o) => o.status === "ordered_from_supplier");
+  const readyToShip = orders.filter((o) => o.status === "confirmed");
   const inTransit = orders.filter((o) => o.status === "shipped");
   const delivered = orders.filter((o) => o.status === "delivered");
 
   // Chart Data: Generate past 7 days revenue progression
   const chartData = useMemo(() => {
-    const days: { date: string; revenue: number; profit: number }[] = [];
+    const days: { date: string; revenue: number; paid: number }[] = [];
     const now = new Date();
 
     for (let i = 6; i >= 0; i--) {
@@ -87,20 +85,19 @@ export function DashboardOverview({
         (o) => o.createdAt && o.createdAt.slice(0, 10) === dateStr,
       );
       const dayRev = matchingOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-      const dayCost = matchingOrders.reduce(
-        (sum, o) => sum + (Number(o.supplierCost) || 0),
-        0,
-      );
+      const dayPaid = matchingOrders
+        .filter((o) => o.paymentStatus === "paid")
+        .reduce((sum, o) => sum + (o.total || 0), 0);
 
       days.push({
         date: dayLabel,
         revenue: dayRev,
-        profit: Math.max(0, dayRev - dayCost),
+        paid: dayPaid,
       });
     }
 
     return days;
-  }, [orders, totalRevenue]);
+  }, [orders]);
 
   const recentOrders = orders.slice(0, 5);
 
@@ -113,7 +110,7 @@ export function DashboardOverview({
   return (
     <div className="space-y-6">
       {/* ─── High-Priority Action Strip ─── */}
-      {(pendingPayments.length > 0 || needsDropship.length > 0) && (
+      {(pendingPayments.length > 0 || readyToShip.length > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {pendingPayments.length > 0 && (
             <div className="flex items-center justify-between p-4 sm:p-5 rounded-xl border border-amber-300 bg-amber-50/60 shadow-2xs">
@@ -141,7 +138,7 @@ export function DashboardOverview({
             </div>
           )}
 
-          {needsDropship.length > 0 && (
+          {readyToShip.length > 0 && (
             <div className="flex items-center justify-between p-4 sm:p-5 rounded-xl border border-blue-300 bg-blue-50/60 shadow-2xs">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center shrink-0">
@@ -149,10 +146,10 @@ export function DashboardOverview({
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-neutral-900">
-                    {needsDropship.length} Order{needsDropship.length > 1 ? "s" : ""} Need Dropship Placement
+                    {readyToShip.length} Order{readyToShip.length > 1 ? "s" : ""} Ready to Ship
                   </p>
                   <p className="text-xs text-neutral-600 mt-0.5">
-                    Payment confirmed; place order with supplier
+                    Payment confirmed; ready for dispatch
                   </p>
                 </div>
               </div>
@@ -161,7 +158,7 @@ export function DashboardOverview({
                 onClick={() => onNavigateTab("orders")}
                 className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 px-3.5 gap-1 shadow-2xs font-medium"
               >
-                Fulfill Orders
+                Manage Orders
                 <ChevronRight className="w-3.5 h-3.5" />
               </Button>
             </div>
@@ -192,21 +189,21 @@ export function DashboardOverview({
           </CardContent>
         </Card>
 
-        {/* Net Profit & Margin */}
+        {/* Verified Revenue */}
         <Card className="hover:shadow-xs transition-shadow">
           <CardContent className="p-5 sm:p-6 flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                Net Profit
+                Verified Paid
               </p>
               <h3 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
-                ₹{netProfit.toLocaleString("en-IN")}
+                ₹{paidRevenue.toLocaleString("en-IN")}
               </h3>
               <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium mt-1">
                 <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px] px-1.5 py-0 font-semibold">
-                  {profitMarginPercent}% margin
+                  {paidRatePercent}% verified
                 </Badge>
-                <span className="text-neutral-400">after dropship</span>
+                <span className="text-neutral-400">of orders</span>
               </div>
             </div>
             <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
@@ -332,8 +329,8 @@ export function DashboardOverview({
                   />
                   <Area
                     type="monotone"
-                    dataKey="profit"
-                    name="Net Profit"
+                    dataKey="paid"
+                    name="Verified Paid"
                     stroke="#10b981"
                     strokeWidth={2}
                     fillOpacity={1}
@@ -345,11 +342,11 @@ export function DashboardOverview({
           </CardContent>
         </Card>
 
-        {/* Dropship & Payment Status Breakdown */}
+        {/* Fulfillment & Payment Status Breakdown */}
         <Card className="flex flex-col justify-between">
           <CardHeader className="p-4 sm:p-5 border-b">
             <CardTitle className="text-base font-bold">
-              Operations & Fulfillment
+              Operations &amp; Fulfillment
             </CardTitle>
             <CardDescription className="text-xs">
               Live pipeline across order lifecycle
@@ -361,14 +358,14 @@ export function DashboardOverview({
             <div className="space-y-3">
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <span className="font-medium text-neutral-700">Awaiting Supplier Order</span>
-                  <span className="font-bold text-amber-700">{needsDropship.length}</span>
+                  <span className="font-medium text-neutral-700">Pending Payment</span>
+                  <span className="font-bold text-amber-700">{pendingPayments.length}</span>
                 </div>
                 <div className="w-full bg-neutral-100 rounded-full h-2">
                   <div
                     className="bg-amber-500 h-2 rounded-full transition-all"
                     style={{
-                      width: `${orders.length ? (needsDropship.length / orders.length) * 100 : 0}%`,
+                      width: `${orders.length ? (pendingPayments.length / orders.length) * 100 : 0}%`,
                     }}
                   />
                 </div>
@@ -376,14 +373,14 @@ export function DashboardOverview({
 
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <span className="font-medium text-neutral-700">Ordered at Supplier</span>
-                  <span className="font-bold text-blue-700">{orderedSupplier.length}</span>
+                  <span className="font-medium text-neutral-700">Confirmed / Ready to Ship</span>
+                  <span className="font-bold text-blue-700">{readyToShip.length}</span>
                 </div>
                 <div className="w-full bg-neutral-100 rounded-full h-2">
                   <div
                     className="bg-blue-500 h-2 rounded-full transition-all"
                     style={{
-                      width: `${orders.length ? (orderedSupplier.length / orders.length) * 100 : 0}%`,
+                      width: `${orders.length ? (readyToShip.length / orders.length) * 100 : 0}%`,
                     }}
                   />
                 </div>

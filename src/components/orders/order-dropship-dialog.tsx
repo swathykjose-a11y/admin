@@ -13,14 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Copy,
-  Check,
-  ExternalLink,
-  PackageCheck,
-  TrendingUp,
-} from "lucide-react";
+import { Copy, Check, PackageCheck } from "lucide-react";
 
 interface OrderDropshipDialogProps {
   order: AdminOrder | null;
@@ -31,10 +24,6 @@ interface OrderDropshipDialogProps {
     data: {
       status: OrderStatus;
       paymentStatus?: string;
-      supplierOrderId?: string;
-      supplierOrderUrl?: string;
-      supplierCost?: number;
-      supplierNotes?: string;
       courierTrackingNumber?: string;
       courierTrackingUrl?: string;
       notes?: string;
@@ -51,27 +40,14 @@ export function OrderDropshipDialog({
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Form State
   const [status, setStatus] = useState<OrderStatus>(order?.status || "confirmed");
   const [paymentStatus, setPaymentStatus] = useState<string>(order?.paymentStatus || "pending");
   const [notes, setNotes] = useState(order?.notes || "");
-  const [supplierOrderId, setSupplierOrderId] = useState(
-    order?.supplierOrderId || "",
-  );
-  const [supplierOrderUrl, setSupplierOrderUrl] = useState(
-    order?.supplierOrderUrl || "",
-  );
-  const [supplierCost, setSupplierCost] = useState(
-    order?.supplierCost?.toString() || "",
-  );
   const [courierTrackingNumber, setCourierTrackingNumber] = useState(
     order?.courierTrackingNumber || "",
   );
   const [courierTrackingUrl, setCourierTrackingUrl] = useState(
     order?.courierTrackingUrl || "",
-  );
-  const [supplierNotes, setSupplierNotes] = useState(
-    order?.supplierNotes || "",
   );
 
   if (!order) return null;
@@ -86,13 +62,6 @@ export function OrderDropshipDialog({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const costNum = parseFloat(supplierCost) || 0;
-  const profit = order.total - costNum;
-  const marginPct =
-    order.total > 0 && costNum > 0
-      ? ((profit / order.total) * 100).toFixed(1)
-      : null;
-
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -100,10 +69,6 @@ export function OrderDropshipDialog({
       await onSave(order.id, {
         status,
         paymentStatus,
-        supplierOrderId: supplierOrderId.trim() || undefined,
-        supplierOrderUrl: supplierOrderUrl.trim() || undefined,
-        supplierCost: costNum > 0 ? costNum : undefined,
-        supplierNotes: supplierNotes.trim() || undefined,
         courierTrackingNumber: courierTrackingNumber.trim() || undefined,
         courierTrackingUrl: courierTrackingUrl.trim() || undefined,
         notes: notes.trim() || undefined,
@@ -127,7 +92,7 @@ export function OrderDropshipDialog({
             </Badge>
           </div>
           <DialogDescription>
-            Copy the customer shipping address to order from your supplier, then record tracking details below.
+            Review customer delivery details, update order status, and add courier tracking.
           </DialogDescription>
         </DialogHeader>
 
@@ -148,12 +113,12 @@ export function OrderDropshipDialog({
                 {copied ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    Copied!
+                    Copied
                   </>
                 ) : (
                   <>
                     <Copy className="w-3.5 h-3.5" />
-                    Copy for Supplier
+                    Copy Address
                   </>
                 )}
               </Button>
@@ -199,22 +164,12 @@ export function OrderDropshipDialog({
             </div>
           </div>
 
-          {/* Dropship Supplier Information */}
+          {/* Order Fulfillment & Tracking */}
           <div className="border rounded-lg p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-900 flex items-center gap-1.5">
-                <PackageCheck className="w-4 h-4 text-emerald-600" />
-                Dropshipping Supplier Info
-              </h4>
-
-              {/* Profit Calculation */}
-              {marginPct && (
-                <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md font-mono">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  Profit: ₹{profit.toFixed(0)} ({marginPct}%)
-                </div>
-              )}
-            </div>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-900 flex items-center gap-1.5">
+              <PackageCheck className="w-4 h-4 text-emerald-600" />
+              Fulfillment &amp; Tracking
+            </h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -226,7 +181,7 @@ export function OrderDropshipDialog({
                   onChange={(e) => setPaymentStatus(e.target.value)}
                   className="w-full h-9 rounded-md border border-input bg-background px-3 text-xs focus:ring-1 focus:ring-ring font-medium"
                 >
-                  <option value="paid">Paid & Verified</option>
+                  <option value="paid">Paid &amp; Verified</option>
                   <option value="pending">Pending Verification</option>
                   <option value="failed">Failed / Unpaid</option>
                   <option value="refunded">Refunded</option>
@@ -243,10 +198,7 @@ export function OrderDropshipDialog({
                   className="w-full h-9 rounded-md border border-input bg-background px-3 text-xs focus:ring-1 focus:ring-ring font-medium"
                 >
                   <option value="pending">Pending Confirmation</option>
-                  <option value="confirmed">Confirmed (Needs Ordering)</option>
-                  <option value="ordered_from_supplier">
-                    Ordered from Supplier
-                  </option>
+                  <option value="confirmed">Confirmed (Ready to Ship)</option>
                   <option value="shipped">Shipped (In Transit)</option>
                   <option value="delivered">Delivered</option>
                   <option value="cancelled">Cancelled</option>
@@ -263,56 +215,6 @@ export function OrderDropshipDialog({
                   onChange={(e) => setNotes(e.target.value)}
                   className="h-9 text-xs font-mono"
                 />
-              </div>
-
-              <div>
-                <label className="text-xs font-medium text-neutral-700 block mb-1">
-                  Supplier Purchase Cost (₹ INR)
-                </label>
-                <Input
-                  type="number"
-                  placeholder="e.g. 450"
-                  value={supplierCost}
-                  onChange={(e) => setSupplierCost(e.target.value)}
-                  className="h-9 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-medium text-neutral-700 block mb-1">
-                  Supplier Order ID / Reference
-                </label>
-                <Input
-                  placeholder="e.g. ALI-982140 or MEESHO-429"
-                  value={supplierOrderId}
-                  onChange={(e) => setSupplierOrderId(e.target.value)}
-                  className="h-9 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-medium text-neutral-700 block mb-1">
-                  Supplier Order URL
-                </label>
-                <div className="flex gap-1.5">
-                  <Input
-                    placeholder="https://supplier.com/order/..."
-                    value={supplierOrderUrl}
-                    onChange={(e) => setSupplierOrderUrl(e.target.value)}
-                    className="h-9 text-xs"
-                  />
-                  {supplierOrderUrl && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="shrink-0 h-9 w-9"
-                      onClick={() => window.open(supplierOrderUrl, "_blank")}
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </Button>
-                  )}
-                </div>
               </div>
 
               <div>
@@ -339,19 +241,6 @@ export function OrderDropshipDialog({
                 />
               </div>
             </div>
-
-            <div>
-              <label className="text-xs font-medium text-neutral-700 block mb-1">
-                Internal Supplier Notes
-              </label>
-              <Textarea
-                placeholder="Notes about packaging, gift card, or supplier message..."
-                value={supplierNotes}
-                onChange={(e) => setSupplierNotes(e.target.value)}
-                rows={2}
-                className="text-xs"
-              />
-            </div>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
@@ -364,7 +253,7 @@ export function OrderDropshipDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={isSaving}>
-              {isSaving ? "Saving..." : "Update Dropship Details"}
+              {isSaving ? "Saving..." : "Update Order"}
             </Button>
           </DialogFooter>
         </form>

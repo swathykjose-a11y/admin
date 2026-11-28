@@ -34,7 +34,7 @@ export function AdminHeader({
       case "overview":
         return {
           title: "Dashboard",
-          subtitle: "Real-time revenue, orders & dropship metrics",
+          subtitle: "Real-time revenue, orders & fulfillment metrics",
         };
       case "payments":
         return {
@@ -44,7 +44,7 @@ export function AdminHeader({
       case "orders":
         return {
           title: "Orders",
-          subtitle: "Customer orders, supplier procurement & tracking",
+          subtitle: "Customer orders, verification & shipping tracking",
         };
       case "products":
         return {
@@ -54,7 +54,7 @@ export function AdminHeader({
       case "revenue":
         return {
           title: "Revenue & Margins",
-          subtitle: "Gross sales, supplier costs & net margins",
+          subtitle: "Gross sales, verified payments & product performance",
         };
       case "cms":
         return {

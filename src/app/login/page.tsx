@@ -50,7 +50,7 @@ export default function LoginPage() {
             Dainty Dazzle
           </h1>
           <p className="text-xs uppercase tracking-widest text-neutral-400 mt-1">
-            Admin & Dropship Portal
+            Admin Portal
           </p>
         </div>
 
