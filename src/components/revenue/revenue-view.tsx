@@ -231,7 +231,7 @@ export function RevenueView({ orders, products = [] }: RevenueViewProps) {
         <Card>
           <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-              Verified UPI Revenue
+              Brand Earned
             </CardTitle>
             <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
               <TrendingUp className="w-4 h-4" />

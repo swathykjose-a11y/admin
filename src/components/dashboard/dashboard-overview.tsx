@@ -189,21 +189,21 @@ export function DashboardOverview({
           </CardContent>
         </Card>
 
-        {/* Verified Revenue */}
+        {/* Brand Earned */}
         <Card className="hover:shadow-xs transition-shadow">
           <CardContent className="p-5 sm:p-6 flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                Verified Paid
+                Brand Earned
               </p>
               <h3 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
                 ₹{paidRevenue.toLocaleString("en-IN")}
               </h3>
               <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium mt-1">
                 <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px] px-1.5 py-0 font-semibold">
-                  {paidRatePercent}% verified
+                  {paidOrders.length} paid
                 </Badge>
-                <span className="text-neutral-400">of orders</span>
+                <span className="text-neutral-400">verified earnings</span>
               </div>
             </div>
             <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
@@ -330,7 +330,7 @@ export function DashboardOverview({
                   <Area
                     type="monotone"
                     dataKey="paid"
-                    name="Verified Paid"
+                    name="Brand Earned"
                     stroke="#10b981"
                     strokeWidth={2}
                     fillOpacity={1}
