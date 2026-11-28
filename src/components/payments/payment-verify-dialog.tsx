@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { AdminOrder, PaymentStatus } from "@/types/admin";
+import { optimizeCloudinaryUrl } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -157,8 +158,10 @@ export function PaymentVerifyDialog({
                     <div className="flex items-center gap-2 min-w-0">
                       {item.imageUrl && (
                         <img
-                          src={item.imageUrl}
+                          src={optimizeCloudinaryUrl(item.imageUrl, 80)}
                           alt={item.productTitle}
+                          loading="lazy"
+                          decoding="async"
                           className="w-7 h-7 rounded object-cover shrink-0"
                         />
                       )}
