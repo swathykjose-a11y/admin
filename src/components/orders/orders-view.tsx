@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { OrderDropshipDialog } from "./order-dropship-dialog";
 import { PaymentVerifyDialog } from "../payments/payment-verify-dialog";
+import { optimizeCloudinaryUrl } from "@/lib/utils";
 import {
   Package,
   Search,
@@ -331,8 +332,10 @@ export function OrdersView({
                               <div key={item.id} className="flex items-center gap-1.5 text-xs truncate">
                                 {item.imageUrl && (
                                   <img
-                                    src={item.imageUrl}
+                                    src={optimizeCloudinaryUrl(item.imageUrl, 80)}
                                     alt={item.productTitle}
+                                    loading="lazy"
+                                    decoding="async"
                                     className="w-5 h-5 rounded object-cover shrink-0"
                                   />
                                 )}
