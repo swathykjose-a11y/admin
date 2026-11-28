@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Copy, Check, PackageCheck, Truck, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { adminApi } from "@/lib/api";
+import { optimizeCloudinaryUrl } from "@/lib/utils";
 
 interface OrderDropshipDialogProps {
   order: AdminOrder | null;
@@ -170,8 +171,10 @@ export function OrderDropshipDialog({
                   <div className="flex items-center gap-3">
                     {item.imageUrl && (
                       <img
-                        src={item.imageUrl}
+                        src={optimizeCloudinaryUrl(item.imageUrl, 120)}
                         alt={item.productTitle}
+                        loading="lazy"
+                        decoding="async"
                         className="w-10 h-10 object-cover rounded border"
                       />
                     )}
