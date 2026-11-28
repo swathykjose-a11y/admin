@@ -40,6 +40,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { adminApi } from "@/lib/api";
+import { optimizeCloudinaryUrl } from "@/lib/utils";
 
 const DEFAULT_CATEGORIES = [
   "Earrings",
@@ -63,6 +64,8 @@ const SUGGESTED_TAGS = [
 
 interface ProductsViewProps {
   products: AdminProduct[];
+  initialCategories?: string[] | null;
+  onCategoriesLoaded?: (categories: string[]) => void;
   onAddProduct: (product: Partial<AdminProduct>) => Promise<void>;
   onDeleteProduct: (id: string) => Promise<void>;
   onRefresh?: () => void;
@@ -70,6 +73,8 @@ interface ProductsViewProps {
 
 export function ProductsView({
   products,
+  initialCategories,
+  onCategoriesLoaded,
   onAddProduct,
   onDeleteProduct,
 }: ProductsViewProps) {
@@ -78,7 +83,9 @@ export function ProductsView({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Categories list (defaults + any custom created by admin)
-  const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
+  const [categories, setCategories] = useState<string[]>(
+    initialCategories && initialCategories.length > 0 ? initialCategories : DEFAULT_CATEGORIES,
+  );
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
 
@@ -138,15 +145,18 @@ export function ProductsView({
     }
   }, [title, handle, selectedCategory, minPrice, compareAtPrice, description, imageUrl, tags, stock]);
 
-  // Fetch collections from server on mount to seed categories
+  // Fetch collections from server on first mount unless already cached
   useEffect(() => {
+    if (initialCategories && initialCategories.length > 0) return;
     adminApi.getCategories().then((serverCats) => {
       if (serverCats && serverCats.length > 0) {
         const serverTitles = serverCats.map((c) => c.title);
-        setCategories((prev) => Array.from(new Set([...DEFAULT_CATEGORIES, ...serverTitles])));
+        const merged = Array.from(new Set([...DEFAULT_CATEGORIES, ...serverTitles]));
+        setCategories(merged);
+        onCategoriesLoaded?.(merged);
       }
     });
-  }, []);
+  }, [initialCategories, onCategoriesLoaded]);
 
   const handleAddNewCategory = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -156,7 +166,9 @@ export function ProductsView({
     // Capitalize nicely
     const formatted = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
     if (!categories.includes(formatted)) {
-      setCategories((prev) => [...prev, formatted]);
+      const nextCategories = [...categories, formatted];
+      setCategories(nextCategories);
+      onCategoriesLoaded?.(nextCategories);
     }
     setSelectedCategory(formatted);
     setNewCategoryName("");
@@ -382,8 +394,10 @@ export function ProductsView({
                     <TableCell>
                       {prod.images?.[0]?.url ? (
                         <img
-                          src={prod.images[0].url}
+                          src={optimizeCloudinaryUrl(prod.images[0].url, 160)}
                           alt={prod.title}
+                          loading="lazy"
+                          decoding="async"
                           className="w-12 h-14 object-cover rounded-md border border-neutral-200/80 bg-neutral-100"
                         />
                       ) : (
@@ -812,8 +826,9 @@ export function ProductsView({
                     {imageUrl && (
                       <div className="relative group rounded-lg overflow-hidden border border-neutral-200 bg-white w-20 h-20">
                         <img
-                          src={imageUrl}
+                          src={optimizeCloudinaryUrl(imageUrl, 200)}
                           alt="Product preview"
+                          decoding="async"
                           className="w-full h-full object-cover"
                         />
                         <button
@@ -845,8 +860,9 @@ export function ProductsView({
                       <div className="relative aspect-4/3 w-full bg-neutral-100 overflow-hidden flex items-center justify-center">
                         {imageUrl ? (
                           <img
-                            src={imageUrl}
+                            src={optimizeCloudinaryUrl(imageUrl, 600)}
                             alt={title || "Preview"}
+                            decoding="async"
                             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                           />
                         ) : (
