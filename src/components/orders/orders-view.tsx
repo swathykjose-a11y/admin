@@ -119,7 +119,7 @@ export function OrdersView({
         return (
           <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 border-purple-300 gap-1 text-[11px]">
             <Truck className="w-3 h-3" />
-            Shipped / In Transit
+            Placed / In Progress
           </Badge>
         );
       case "delivered":
@@ -201,10 +201,10 @@ export function OrdersView({
                 { key: "all", label: `All (${orders.length})` },
                 {
                   key: "confirmed",
-                  label: `Ready to Ship (${needsDropshipCount})`,
+                  label: `Confirmed (${needsDropshipCount})`,
                   highlight: needsDropshipCount > 0,
                 },
-                { key: "shipped", label: "Shipped" },
+                { key: "shipped", label: "In Progress" },
                 { key: "delivered", label: "Delivered" },
               ].map((f) => (
                 <Button

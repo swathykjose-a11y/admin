@@ -191,7 +191,7 @@ export function OrderDropshipDialog({
                 >
                   <option value="pending">Pending Confirmation</option>
                   <option value="confirmed">Confirmed</option>
-                  <option value="shipped">Shipped</option>
+                  <option value="shipped">Placed / In Progress</option>
                   <option value="delivered">Delivered</option>
                   <option value="cancelled">Cancelled</option>
                 </select>

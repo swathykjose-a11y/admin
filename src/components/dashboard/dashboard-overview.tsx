@@ -146,10 +146,10 @@ export function DashboardOverview({
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-neutral-900">
-                    {readyToShip.length} Order{readyToShip.length > 1 ? "s" : ""} Ready to Ship
+                    {readyToShip.length} Confirmed Order{readyToShip.length > 1 ? "s" : ""}
                   </p>
                   <p className="text-xs text-neutral-600 mt-0.5">
-                    Payment confirmed; ready for dispatch
+                    Payment verified; ready to place order
                   </p>
                 </div>
               </div>
@@ -223,7 +223,7 @@ export function DashboardOverview({
                 {orders.length}
               </h3>
               <div className="flex items-center gap-1 text-xs text-neutral-500 font-medium mt-1">
-                <span>{delivered.length} delivered • {inTransit.length} in transit</span>
+                <span>{delivered.length} delivered • {readyToShip.length} confirmed</span>
               </div>
             </div>
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
@@ -373,7 +373,7 @@ export function DashboardOverview({
 
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <span className="font-medium text-neutral-700">Confirmed / Ready to Ship</span>
+                  <span className="font-medium text-neutral-700">Confirmed</span>
                   <span className="font-bold text-blue-700">{readyToShip.length}</span>
                 </div>
                 <div className="w-full bg-neutral-100 rounded-full h-2">
@@ -388,7 +388,7 @@ export function DashboardOverview({
 
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <span className="font-medium text-neutral-700">Shipped / In Transit</span>
+                  <span className="font-medium text-neutral-700">Placed / In Progress</span>
                   <span className="font-bold text-purple-700">{inTransit.length}</span>
                 </div>
                 <div className="w-full bg-neutral-100 rounded-full h-2">
