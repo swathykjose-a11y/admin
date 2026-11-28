@@ -249,6 +249,29 @@ export const adminApi = {
   },
 
   // CMS
+  async getAllCMS(): Promise<{
+    sections: Record<string, any>;
+    isLive: boolean;
+  }> {
+    const res = await adminFetch<Record<string, any>>(`/api/cms`);
+    if (res.data && !res.isFallback && typeof res.data === "object") {
+      return { sections: res.data, isLive: true };
+    }
+
+    // Fallback for older backend deployments without GET /api/cms
+    const keys = ["hero", "featured", "editorial", "story", "bottom-banner", "shipping"] as const;
+    const results = await Promise.all(keys.map((k) => adminApi.getCMS(k)));
+    const sections: Record<string, any> = {};
+    let anyLive = false;
+    keys.forEach((k, idx) => {
+      if (results[idx].isLive && results[idx].data) {
+        sections[k] = results[idx].data;
+        anyLive = true;
+      }
+    });
+    return { sections, isLive: anyLive };
+  },
+
   async getCMS(section: "hero" | "featured" | "editorial" | "story" | "bottom-banner" | "shipping"): Promise<{
     data: any;
     isLive: boolean;
