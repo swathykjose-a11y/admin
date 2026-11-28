@@ -43,12 +43,6 @@ export function OrderDropshipDialog({
   const [status, setStatus] = useState<OrderStatus>(order?.status || "confirmed");
   const [paymentStatus, setPaymentStatus] = useState<string>(order?.paymentStatus || "pending");
   const [notes, setNotes] = useState(order?.notes || "");
-  const [courierTrackingNumber, setCourierTrackingNumber] = useState(
-    order?.courierTrackingNumber || "",
-  );
-  const [courierTrackingUrl, setCourierTrackingUrl] = useState(
-    order?.courierTrackingUrl || "",
-  );
 
   if (!order) return null;
 
@@ -69,8 +63,6 @@ export function OrderDropshipDialog({
       await onSave(order.id, {
         status,
         paymentStatus,
-        courierTrackingNumber: courierTrackingNumber.trim() || undefined,
-        courierTrackingUrl: courierTrackingUrl.trim() || undefined,
         notes: notes.trim() || undefined,
       });
       onClose();
@@ -92,7 +84,7 @@ export function OrderDropshipDialog({
             </Badge>
           </div>
           <DialogDescription>
-            Review customer delivery details, update order status, and add courier tracking.
+            Copy the customer delivery address and update order status.
           </DialogDescription>
         </DialogHeader>
 
@@ -164,11 +156,11 @@ export function OrderDropshipDialog({
             </div>
           </div>
 
-          {/* Order Fulfillment & Tracking */}
+          {/* Order Status & Notes */}
           <div className="border rounded-lg p-4 space-y-4">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-900 flex items-center gap-1.5">
               <PackageCheck className="w-4 h-4 text-emerald-600" />
-              Fulfillment &amp; Tracking
+              Order Status &amp; Payment
             </h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -190,7 +182,7 @@ export function OrderDropshipDialog({
 
               <div>
                 <label className="text-xs font-medium text-neutral-700 block mb-1">
-                  Fulfillment Status
+                  Order Status
                 </label>
                 <select
                   value={status}
@@ -198,8 +190,8 @@ export function OrderDropshipDialog({
                   className="w-full h-9 rounded-md border border-input bg-background px-3 text-xs focus:ring-1 focus:ring-ring font-medium"
                 >
                   <option value="pending">Pending Confirmation</option>
-                  <option value="confirmed">Confirmed (Ready to Ship)</option>
-                  <option value="shipped">Shipped (In Transit)</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="shipped">Shipped</option>
                   <option value="delivered">Delivered</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
@@ -214,30 +206,6 @@ export function OrderDropshipDialog({
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="h-9 text-xs font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-medium text-neutral-700 block mb-1">
-                  Courier Tracking Number
-                </label>
-                <Input
-                  placeholder="e.g. DELHIVERY9812401"
-                  value={courierTrackingNumber}
-                  onChange={(e) => setCourierTrackingNumber(e.target.value)}
-                  className="h-9 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-medium text-neutral-700 block mb-1">
-                  Tracking Page URL
-                </label>
-                <Input
-                  placeholder="https://www.delhivery.com/track/..."
-                  value={courierTrackingUrl}
-                  onChange={(e) => setCourierTrackingUrl(e.target.value)}
-                  className="h-9 text-xs"
                 />
               </div>
             </div>

@@ -164,10 +164,10 @@ export function OrdersView({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <CardTitle className="text-base font-bold">
-                Orders &amp; Fulfillment
+                Orders
               </CardTitle>
               <CardDescription className="text-xs">
-                Manage incoming orders, payment verification, and courier tracking
+                Manage incoming orders, payment verification, and customer delivery details
               </CardDescription>
             </div>
 
@@ -256,8 +256,7 @@ export function OrdersView({
                   <TableHead className="text-xs font-semibold">Customer & Delivery</TableHead>
                   <TableHead className="text-xs font-semibold">Ordered Items</TableHead>
                   <TableHead className="text-xs font-semibold">Retail & Payment</TableHead>
-                  <TableHead className="text-xs font-semibold">Fulfillment</TableHead>
-                  <TableHead className="text-xs font-semibold">Tracking</TableHead>
+                  <TableHead className="text-xs font-semibold">Status</TableHead>
                   <TableHead className="text-xs font-semibold text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -265,7 +264,7 @@ export function OrdersView({
                 {filteredOrders.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={6}
                       className="h-40 text-center text-muted-foreground text-xs"
                     >
                       <Package className="w-8 h-8 mx-auto text-neutral-300 mb-2" />
@@ -368,25 +367,6 @@ export function OrdersView({
                           {getStatusBadge(order.status)}
                         </TableCell>
 
-                        {/* Tracking */}
-                        <TableCell>
-                          {order.courierTrackingNumber ? (
-                            <a
-                              href={order.courierTrackingUrl || "#"}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-600 hover:underline flex items-center gap-1 font-mono"
-                            >
-                              <Truck className="w-3 h-3" />
-                              {order.courierTrackingNumber}
-                            </a>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">
-                              Not shipped yet
-                            </span>
-                          )}
-                        </TableCell>
-
                         {/* Actions */}
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1.5">
@@ -408,7 +388,7 @@ export function OrdersView({
                               className="text-[11px] h-7 px-2.5 text-neutral-700 hover:text-neutral-900 gap-1 bg-white"
                             >
                               <PackageCheck className="w-3 h-3" />
-                              Fulfill
+                              Details
                             </Button>
                           </div>
                         </TableCell>
