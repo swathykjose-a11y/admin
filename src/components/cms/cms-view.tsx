@@ -7,10 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, Upload, Loader2, X } from "lucide-react";
 import { adminApi } from "@/lib/api";
+import { optimizeCloudinaryUrl } from "@/lib/utils";
 
 export type CmsSectionKey = "hero" | "featured" | "editorial" | "story" | "bottom-banner" | "shipping";
 
+interface CmsCachePayload {
+  sections: Record<string, any>;
+  borzoStatus: { configured: boolean; environment: string } | null;
+}
+
 interface CmsViewProps {
+  initialCms?: CmsCachePayload | null;
+  onCmsLoaded?: (data: CmsCachePayload) => void;
   onSaveCms: (section: CmsSectionKey, data: any) => Promise<boolean>;
 }
 
@@ -21,7 +29,7 @@ const CLOUDINARY_DEFAULTS = {
   bottomBanner: "https://res.cloudinary.com/io2tbyjp/image/upload/v1795766221/dainty-dazzle/dainty-dazzle/04-editorial-banner-technique.jpg",
 };
 
-export function CmsView({ onSaveCms }: CmsViewProps) {
+export function CmsView({ initialCms, onCmsLoaded, onSaveCms }: CmsViewProps) {
   const [savedSection, setSavedSection] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState<string | null>(null);
   const [uploadingSection, setUploadingSection] = useState<string | null>(null);
@@ -80,75 +88,86 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
   const [borzoPickupAddress, setBorzoPickupAddress] = useState("");
   const [borzoStatus, setBorzoStatus] = useState<{ configured: boolean; environment: string } | null>(null);
 
-  // Load live CMS on mount
+  // Load live CMS via batch endpoint once (reusing cached state across tab switches)
   useEffect(() => {
+    const applySections = (
+      sections: Record<string, any>,
+      borzo: { configured: boolean; environment: string } | null,
+    ) => {
+      if (borzo) setBorzoStatus(borzo);
+
+      const shipping = sections.shipping;
+      if (shipping) {
+        if (shipping.freeDeliveryAbove !== undefined) setFreeDeliveryAbove(String(shipping.freeDeliveryAbove));
+        if (shipping.deliveryFee !== undefined) setDeliveryFee(String(shipping.deliveryFee));
+        if (typeof shipping.borzoEnabled === "boolean") setBorzoEnabled(shipping.borzoEnabled);
+        if (typeof shipping.borzoAutoBookOnVerify === "boolean") setBorzoAutoBookOnVerify(shipping.borzoAutoBookOnVerify);
+        if (shipping.borzoPickupName) setBorzoPickupName(shipping.borzoPickupName);
+        if (shipping.borzoPickupPhone) setBorzoPickupPhone(shipping.borzoPickupPhone);
+        if (shipping.borzoPickupAddress) setBorzoPickupAddress(shipping.borzoPickupAddress);
+      }
+
+      const hero = sections.hero;
+      if (hero) {
+        if (hero.headline) setHeroHeadline(hero.headline);
+        if (hero.subtitle) setHeroSubtitle(hero.subtitle);
+        if (hero.ctaText) setHeroCtaText(hero.ctaText);
+        if (hero.ctaLink) setHeroCtaLink(hero.ctaLink);
+        if (hero.imageUrl) setHeroImage(hero.imageUrl);
+      }
+
+      const feat = sections.featured;
+      if (feat) {
+        if (feat.eyebrow) setFeaturedEyebrow(feat.eyebrow);
+        if (feat.headline) setFeaturedHeadline(feat.headline);
+        if (feat.description) setFeaturedDesc(feat.description);
+      }
+
+      const edit = sections.editorial;
+      if (edit) {
+        if (edit.headline) setEditorialHeadline(edit.headline);
+        if (edit.subtitle) setEditorialSubtitle(edit.subtitle);
+        if (edit.imageUrl) setEditorialImage(edit.imageUrl);
+      }
+
+      const story = sections.story;
+      if (story) {
+        if (story.eyebrow) setStoryEyebrow(story.eyebrow);
+        if (story.headline) setStoryHeadline(story.headline);
+        if (story.paragraph1) setStoryP1(story.paragraph1);
+        if (story.paragraph2) setStoryP2(story.paragraph2);
+        if (story.imageUrl) setStoryImage(story.imageUrl);
+      }
+
+      const bottom = sections["bottom-banner"];
+      if (bottom) {
+        if (bottom.headline) setBottomHeadline(bottom.headline);
+        if (bottom.subtitle) setBottomSubtitle(bottom.subtitle);
+        if (bottom.imageUrl) setBottomImage(bottom.imageUrl);
+      }
+    };
+
+    if (initialCms) {
+      applySections(initialCms.sections, initialCms.borzoStatus);
+      return;
+    }
+
     let mounted = true;
     const fetchSections = async () => {
       try {
-        const [heroRes, featRes, editRes, storyRes, bottomRes, shippingRes, borzoSt] = await Promise.allSettled([
-          adminApi.getCMS("hero"),
-          adminApi.getCMS("featured"),
-          adminApi.getCMS("editorial"),
-          adminApi.getCMS("story"),
-          adminApi.getCMS("bottom-banner"),
-          adminApi.getCMS("shipping"),
+        const [cmsRes, borzoSt] = await Promise.allSettled([
+          adminApi.getAllCMS(),
           adminApi.getBorzoStatus(),
         ]);
 
         if (!mounted) return;
 
-        if (shippingRes.status === "fulfilled" && shippingRes.value.data) {
-          const d = shippingRes.value.data;
-          if (d.freeDeliveryAbove !== undefined) setFreeDeliveryAbove(String(d.freeDeliveryAbove));
-          if (d.deliveryFee !== undefined) setDeliveryFee(String(d.deliveryFee));
-          if (typeof d.borzoEnabled === "boolean") setBorzoEnabled(d.borzoEnabled);
-          if (typeof d.borzoAutoBookOnVerify === "boolean") setBorzoAutoBookOnVerify(d.borzoAutoBookOnVerify);
-          if (d.borzoPickupName) setBorzoPickupName(d.borzoPickupName);
-          if (d.borzoPickupPhone) setBorzoPickupPhone(d.borzoPickupPhone);
-          if (d.borzoPickupAddress) setBorzoPickupAddress(d.borzoPickupAddress);
-        }
+        const sections = cmsRes.status === "fulfilled" ? cmsRes.value.sections : {};
+        const borzo = borzoSt.status === "fulfilled" ? borzoSt.value : null;
 
-        if (borzoSt.status === "fulfilled") {
-          setBorzoStatus(borzoSt.value);
-        }
-
-        if (heroRes.status === "fulfilled" && heroRes.value.data) {
-          const d = heroRes.value.data;
-          if (d.headline) setHeroHeadline(d.headline);
-          if (d.subtitle) setHeroSubtitle(d.subtitle);
-          if (d.ctaText) setHeroCtaText(d.ctaText);
-          if (d.ctaLink) setHeroCtaLink(d.ctaLink);
-          if (d.imageUrl) setHeroImage(d.imageUrl);
-        }
-
-        if (featRes.status === "fulfilled" && featRes.value.data) {
-          const d = featRes.value.data;
-          if (d.eyebrow) setFeaturedEyebrow(d.eyebrow);
-          if (d.headline) setFeaturedHeadline(d.headline);
-          if (d.description) setFeaturedDesc(d.description);
-        }
-
-        if (editRes.status === "fulfilled" && editRes.value.data) {
-          const d = editRes.value.data;
-          if (d.headline) setEditorialHeadline(d.headline);
-          if (d.subtitle) setEditorialSubtitle(d.subtitle);
-          if (d.imageUrl) setEditorialImage(d.imageUrl);
-        }
-
-        if (storyRes.status === "fulfilled" && storyRes.value.data) {
-          const d = storyRes.value.data;
-          if (d.eyebrow) setStoryEyebrow(d.eyebrow);
-          if (d.headline) setStoryHeadline(d.headline);
-          if (d.paragraph1) setStoryP1(d.paragraph1);
-          if (d.paragraph2) setStoryP2(d.paragraph2);
-          if (d.imageUrl) setStoryImage(d.imageUrl);
-        }
-
-        if (bottomRes.status === "fulfilled" && bottomRes.value.data) {
-          const d = bottomRes.value.data;
-          if (d.headline) setBottomHeadline(d.headline);
-          if (d.subtitle) setBottomSubtitle(d.subtitle);
-          if (d.imageUrl) setBottomImage(d.imageUrl);
+        applySections(sections, borzo);
+        if (cmsRes.status === "fulfilled" && cmsRes.value.isLive) {
+          onCmsLoaded?.({ sections, borzoStatus: borzo });
         }
       } catch (e) {
         console.warn("Failed to load CMS data:", e);
@@ -159,7 +178,7 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [initialCms, onCmsLoaded]);
 
   const handleImageUpload = async (
     sectionKey: string,
@@ -310,8 +329,10 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
         {currentUrl ? (
           <div className="relative group rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100 aspect-4/3">
             <img
-              src={currentUrl}
+              src={optimizeCloudinaryUrl(currentUrl, 800)}
               alt={altLabel}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-neutral-950/0 group-hover:bg-neutral-950/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
