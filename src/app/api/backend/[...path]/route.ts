@@ -44,6 +44,7 @@ async function proxyRequest(
       method: request.method,
       headers,
       body,
+      cache: "no-store",
     });
 
     const data = await response.text();
@@ -52,6 +53,7 @@ async function proxyRequest(
       headers: {
         "content-type":
           response.headers.get("content-type") || "application/json",
+        "cache-control": "private, no-store",
       },
     });
   } catch (error) {
