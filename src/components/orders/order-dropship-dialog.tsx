@@ -13,7 +13,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Check, PackageCheck } from "lucide-react";
+import { Copy, Check, PackageCheck, Truck, ExternalLink, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { adminApi } from "@/lib/api";
 
 interface OrderDropshipDialogProps {
   order: AdminOrder | null;
@@ -43,6 +45,9 @@ export function OrderDropshipDialog({
   const [status, setStatus] = useState<OrderStatus>(order?.status || "confirmed");
   const [paymentStatus, setPaymentStatus] = useState<string>(order?.paymentStatus || "pending");
   const [notes, setNotes] = useState(order?.notes || "");
+  const [borzoQuote, setBorzoQuote] = useState<{ deliveryFeeAmount: string; paymentAmount: string } | null>(null);
+  const [isCalculatingBorzo, setIsCalculatingBorzo] = useState(false);
+  const [isBookingBorzo, setIsBookingBorzo] = useState(false);
 
   if (!order) return null;
 
@@ -54,6 +59,37 @@ export function OrderDropshipDialog({
     navigator.clipboard.writeText(fullAddress);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCalculateBorzo = async () => {
+    setIsCalculatingBorzo(true);
+    try {
+      const quote = await adminApi.calculateBorzo(order.id);
+      setBorzoQuote(quote);
+      toast.success(`Borzo delivery quote: ₹${quote.deliveryFeeAmount}`);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to calculate Borzo quote");
+    } finally {
+      setIsCalculatingBorzo(false);
+    }
+  };
+
+  const handleBookBorzo = async () => {
+    setIsBookingBorzo(true);
+    try {
+      const res = await adminApi.bookBorzo(order.id);
+      toast.success(`Borzo booked! Order #${res.borzo?.borzoOrderName || res.borzo?.borzoOrderId}`);
+      await onSave(order.id, {
+        status: res.order.status,
+        paymentStatus: res.order.paymentStatus,
+        notes: res.order.notes,
+      });
+      onClose();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to book Borzo delivery");
+    } finally {
+      setIsBookingBorzo(false);
+    }
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -209,6 +245,76 @@ export function OrderDropshipDialog({
                 />
               </div>
             </div>
+          </div>
+
+          {/* Borzo Courier Booking */}
+          <div className="border rounded-lg p-4 space-y-3 bg-neutral-50/50">
+            <div className="flex items-center justify-between gap-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-900 flex items-center gap-1.5">
+                <Truck className="w-4 h-4 text-neutral-700" />
+                Borzo Delivery Booking
+              </h4>
+              {borzoQuote && (
+                <span className="text-xs font-mono font-semibold text-neutral-900">
+                  Est. Fee: ₹{borzoQuote.deliveryFeeAmount}
+                </span>
+              )}
+            </div>
+
+            {order.courierTrackingNumber ? (
+              <div className="flex items-center justify-between text-xs bg-white border rounded-md p-3">
+                <div>
+                  <span className="text-neutral-500">Borzo Order ID: </span>
+                  <span className="font-mono font-semibold text-neutral-900">
+                    #{order.courierTrackingNumber}
+                  </span>
+                </div>
+                {order.courierTrackingUrl && (
+                  <a
+                    href={order.courierTrackingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-blue-600 hover:underline font-medium"
+                  >
+                    Track Live <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isCalculatingBorzo || isBookingBorzo}
+                  onClick={handleCalculateBorzo}
+                  className="text-xs h-8"
+                >
+                  {isCalculatingBorzo ? (
+                    <span className="flex items-center gap-1.5">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Calculating...
+                    </span>
+                  ) : (
+                    "Check Borzo Fee"
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={isBookingBorzo || isCalculatingBorzo}
+                  onClick={handleBookBorzo}
+                  className="text-xs h-8 bg-neutral-900 text-white hover:bg-neutral-800"
+                >
+                  {isBookingBorzo ? (
+                    <span className="flex items-center gap-1.5">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Booking...
+                    </span>
+                  ) : (
+                    "Book Borzo Delivery"
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">

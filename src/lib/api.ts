@@ -249,7 +249,7 @@ export const adminApi = {
   },
 
   // CMS
-  async getCMS(section: "hero" | "featured" | "editorial" | "story" | "bottom-banner"): Promise<{
+  async getCMS(section: "hero" | "featured" | "editorial" | "story" | "bottom-banner" | "shipping"): Promise<{
     data: any;
     isLive: boolean;
   }> {
@@ -261,7 +261,7 @@ export const adminApi = {
   },
 
   async updateCMS(
-    section: "hero" | "featured" | "editorial" | "story" | "bottom-banner",
+    section: "hero" | "featured" | "editorial" | "story" | "bottom-banner" | "shipping",
     data: any,
   ): Promise<boolean> {
     const res = await adminFetch<{ success: boolean }>(
@@ -273,5 +273,42 @@ export const adminApi = {
     );
 
     return res.data?.success ?? false;
+  },
+
+  // Borzo Delivery API
+  async getBorzoStatus(): Promise<{ configured: boolean; environment: string }> {
+    const res = await adminFetch<{ success: boolean; configured: boolean; environment: string }>(
+      `/api/admin/borzo/status`,
+    );
+    return {
+      configured: Boolean(res.data?.configured),
+      environment: res.data?.environment || "test",
+    };
+  },
+
+  async calculateBorzo(orderId: string): Promise<{ deliveryFeeAmount: string; paymentAmount: string }> {
+    const url = `/api/backend/api/admin/orders/${orderId}/borzo/calculate`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    const json = await res.json();
+    if (!res.ok || !json?.success) {
+      throw new Error(json?.error?.message || "Failed to calculate Borzo delivery fee");
+    }
+    return json.quote;
+  },
+
+  async bookBorzo(orderId: string): Promise<{ borzo: any; order: AdminOrder }> {
+    const url = `/api/backend/api/admin/orders/${orderId}/borzo/book`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    const json = await res.json();
+    if (!res.ok || !json?.success) {
+      throw new Error(json?.error?.message || "Failed to book Borzo delivery");
+    }
+    return { borzo: json.borzo, order: json.order };
   },
 };

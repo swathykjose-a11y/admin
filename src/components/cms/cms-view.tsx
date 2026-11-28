@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Check, Upload, Loader2, X } from "lucide-react";
 import { adminApi } from "@/lib/api";
 
-export type CmsSectionKey = "hero" | "featured" | "editorial" | "story" | "bottom-banner";
+export type CmsSectionKey = "hero" | "featured" | "editorial" | "story" | "bottom-banner" | "shipping";
 
 interface CmsViewProps {
   onSaveCms: (section: CmsSectionKey, data: any) => Promise<boolean>;
@@ -70,20 +70,47 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
   );
   const [bottomImage, setBottomImage] = useState(CLOUDINARY_DEFAULTS.bottomBanner);
 
+  // 6. Delivery & Borzo Settings state
+  const [freeDeliveryAbove, setFreeDeliveryAbove] = useState("299");
+  const [deliveryFee, setDeliveryFee] = useState("99");
+  const [borzoEnabled, setBorzoEnabled] = useState(false);
+  const [borzoAutoBookOnVerify, setBorzoAutoBookOnVerify] = useState(false);
+  const [borzoPickupName, setBorzoPickupName] = useState("Swathy Jose");
+  const [borzoPickupPhone, setBorzoPickupPhone] = useState("9619408985");
+  const [borzoPickupAddress, setBorzoPickupAddress] = useState("");
+  const [borzoStatus, setBorzoStatus] = useState<{ configured: boolean; environment: string } | null>(null);
+
   // Load live CMS on mount
   useEffect(() => {
     let mounted = true;
     const fetchSections = async () => {
       try {
-        const [heroRes, featRes, editRes, storyRes, bottomRes] = await Promise.allSettled([
+        const [heroRes, featRes, editRes, storyRes, bottomRes, shippingRes, borzoSt] = await Promise.allSettled([
           adminApi.getCMS("hero"),
           adminApi.getCMS("featured"),
           adminApi.getCMS("editorial"),
           adminApi.getCMS("story"),
           adminApi.getCMS("bottom-banner"),
+          adminApi.getCMS("shipping"),
+          adminApi.getBorzoStatus(),
         ]);
 
         if (!mounted) return;
+
+        if (shippingRes.status === "fulfilled" && shippingRes.value.data) {
+          const d = shippingRes.value.data;
+          if (d.freeDeliveryAbove !== undefined) setFreeDeliveryAbove(String(d.freeDeliveryAbove));
+          if (d.deliveryFee !== undefined) setDeliveryFee(String(d.deliveryFee));
+          if (typeof d.borzoEnabled === "boolean") setBorzoEnabled(d.borzoEnabled);
+          if (typeof d.borzoAutoBookOnVerify === "boolean") setBorzoAutoBookOnVerify(d.borzoAutoBookOnVerify);
+          if (d.borzoPickupName) setBorzoPickupName(d.borzoPickupName);
+          if (d.borzoPickupPhone) setBorzoPickupPhone(d.borzoPickupPhone);
+          if (d.borzoPickupAddress) setBorzoPickupAddress(d.borzoPickupAddress);
+        }
+
+        if (borzoSt.status === "fulfilled") {
+          setBorzoStatus(borzoSt.value);
+        }
 
         if (heroRes.status === "fulfilled" && heroRes.value.data) {
           const d = heroRes.value.data;
@@ -250,6 +277,25 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
     }
   };
 
+  const handleSaveShipping = async () => {
+    setIsSaving("shipping");
+    try {
+      const ok = await onSaveCms("shipping", {
+        freeDeliveryAbove: Math.max(0, Number(freeDeliveryAbove) || 0),
+        deliveryFee: Math.max(0, Number(deliveryFee) || 0),
+        borzoEnabled,
+        borzoAutoBookOnVerify,
+        borzoPickupName: borzoPickupName.trim(),
+        borzoPickupPhone: borzoPickupPhone.trim(),
+        borzoPickupAddress: borzoPickupAddress.trim(),
+        borzoVehicleTypeId: 8,
+      });
+      if (ok) notifySave("shipping");
+    } finally {
+      setIsSaving(null);
+    }
+  };
+
   const renderImagePanel = (
     sectionId: string,
     currentUrl: string,
@@ -351,6 +397,169 @@ export function CmsView({ onSaveCms }: CmsViewProps) {
 
   return (
     <div className="space-y-6">
+      {/* 0. Delivery Charges & Borzo Auto-Booking */}
+      <section className="bg-white border border-neutral-200 rounded-xl p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+          <div className="lg:col-span-7 space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <h2 className="text-sm font-semibold text-neutral-900">
+                  Delivery Charges &amp; Borzo Auto-Booking
+                </h2>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Configure free delivery threshold, base delivery fee, and Borzo Business API pickup details.
+                </p>
+              </div>
+              {savedSection === "shipping" && (
+                <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
+                  <Check className="w-3.5 h-3.5" /> Saved
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div>
+                <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                  Free Delivery Above (₹)
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={freeDeliveryAbove}
+                  onChange={(e) => setFreeDeliveryAbove(e.target.value)}
+                  className="text-xs h-9 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                  Base Delivery Charge (₹)
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={deliveryFee}
+                  onChange={(e) => setDeliveryFee(e.target.value)}
+                  className="text-xs h-9 font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2.5 pt-2 border-t border-neutral-100">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={borzoEnabled}
+                  onChange={(e) => setBorzoEnabled(e.target.checked)}
+                  className="rounded border-neutral-300 w-4 h-4"
+                />
+                <span className="text-xs font-medium text-neutral-800">
+                  Enable Borzo delivery booking
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={borzoAutoBookOnVerify}
+                  onChange={(e) => setBorzoAutoBookOnVerify(e.target.checked)}
+                  disabled={!borzoEnabled}
+                  className="rounded border-neutral-300 w-4 h-4 disabled:opacity-50"
+                />
+                <span className="text-xs text-neutral-700">
+                  Automatically book Borzo courier when UPI payment is verified
+                </span>
+              </label>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                  Pickup Contact Name
+                </label>
+                <Input
+                  value={borzoPickupName}
+                  onChange={(e) => setBorzoPickupName(e.target.value)}
+                  className="text-xs h-9"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                  Pickup Phone
+                </label>
+                <Input
+                  value={borzoPickupPhone}
+                  onChange={(e) => setBorzoPickupPhone(e.target.value)}
+                  className="text-xs h-9 font-mono"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                Store Pickup Address (for Borzo courier)
+              </label>
+              <Textarea
+                value={borzoPickupAddress}
+                onChange={(e) => setBorzoPickupAddress(e.target.value)}
+                rows={2}
+                placeholder="Full street address, landmark, city, state, PIN code"
+                className="text-xs resize-none"
+              />
+            </div>
+
+            <div className="pt-1">
+              <Button
+                size="sm"
+                disabled={isSaving === "shipping"}
+                onClick={handleSaveShipping}
+                className="text-xs h-9 px-5 bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer"
+              >
+                {isSaving === "shipping" ? (
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
+                  </span>
+                ) : (
+                  "Save Delivery & Borzo Settings"
+                )}
+              </Button>
+            </div>
+          </div>
+
+          <div className="lg:col-span-5">
+            <div className="rounded-lg border border-neutral-200/80 bg-neutral-50/70 p-5 space-y-4 text-xs">
+              <div className="space-y-1">
+                <p className="font-semibold text-neutral-900">Active Checkout Pricing</p>
+                <p className="text-neutral-600">
+                  Orders above <strong className="font-mono text-neutral-900">₹{Number(freeDeliveryAbove || 0)}</strong> receive{" "}
+                  <strong className="text-emerald-700">FREE delivery</strong>.
+                </p>
+                <p className="text-neutral-600">
+                  Orders at or below ₹{Number(freeDeliveryAbove || 0)} are charged{" "}
+                  <strong className="font-mono text-neutral-900">₹{Number(deliveryFee || 0)}</strong>.
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-neutral-200/70 space-y-1.5">
+                <p className="font-semibold text-neutral-900">Borzo API Connection</p>
+                <p className="text-neutral-600">
+                  Token:{" "}
+                  <span className={borzoStatus?.configured ? "text-emerald-700 font-medium" : "text-amber-700 font-medium"}>
+                    {borzoStatus?.configured ? "Configured" : "Not set (add BORZO_AUTH_TOKEN secret)"}
+                  </span>
+                </p>
+                <p className="text-neutral-600">
+                  Environment:{" "}
+                  <span className="font-mono font-medium text-neutral-900">
+                    {borzoStatus?.environment || "test"}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 1. Hero Section */}
       <section className="bg-white border border-neutral-200 rounded-xl p-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
