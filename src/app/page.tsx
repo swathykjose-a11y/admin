@@ -35,28 +35,38 @@ export default function AdminDashboardPage() {
   const router = useRouter();
 
   // Navigation state with URL and localStorage persistence
-  const [activeTab, setActiveTab] = useState<string>("overview");
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    if (typeof window === "undefined") return "overview";
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const queryTab = params.get("tab");
+      const hashTab = window.location.hash.replace("#", "");
+      const savedTab = localStorage.getItem("dd_admin_active_tab");
+      const candidate = queryTab || hashTab || savedTab;
+      if (candidate && (VALID_TABS as readonly string[]).includes(candidate)) {
+        return candidate;
+      }
+    } catch {
+      // ignore
+    }
+    return "overview";
+  });
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Restore tab from URL query param (?tab=...) or localStorage on mount
+  // Sync tab to URL and localStorage when changed
   useEffect(() => {
     if (typeof window === "undefined") return;
-
-    const params = new URLSearchParams(window.location.search);
-    const queryTab = params.get("tab");
-    const hashTab = window.location.hash.replace("#", "");
-    const savedTab = localStorage.getItem("dd_admin_active_tab");
-
-    const candidate = queryTab || hashTab || savedTab;
-    if (candidate && (VALID_TABS as readonly string[]).includes(candidate)) {
-      setActiveTab(candidate);
-      if (queryTab !== candidate) {
-        const url = new URL(window.location.href);
-        url.searchParams.set("tab", candidate);
+    try {
+      localStorage.setItem("dd_admin_active_tab", activeTab);
+      const url = new URL(window.location.href);
+      if (url.searchParams.get("tab") !== activeTab) {
+        url.searchParams.set("tab", activeTab);
         window.history.replaceState(null, "", url.toString());
       }
+    } catch {
+      // ignore
     }
-  }, []);
+  }, [activeTab]);
 
   const handleSelectTab = (tab: string) => {
     setActiveTab(tab);
@@ -73,6 +83,11 @@ export default function AdminDashboardPage() {
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [paymentOverview, setPaymentOverview] =
     useState<PaymentReceivingOverview | null>(null);
+  const [cachedCategories, setCachedCategories] = useState<string[] | null>(null);
+  const [cachedCms, setCachedCms] = useState<{
+    sections: Record<string, any>;
+    borzoStatus: { configured: boolean; environment: string } | null;
+  } | null>(null);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -83,6 +98,8 @@ export default function AdminDashboardPage() {
   const [showQrModal, setShowQrModal] = useState(false);
   const knownOrderIdsRef = useRef<Set<string>>(new Set());
   const hasInitialLoadedRef = useRef(false);
+  const isPollingRef = useRef(false);
+  const lastPollAtRef = useRef(0);
 
   const loadData = useCallback(async (showToast = false) => {
     setIsLoading(true);
@@ -102,8 +119,11 @@ export default function AdminDashboardPage() {
 
       knownOrderIdsRef.current = new Set(ordersRes.orders.map((o) => o.id));
       hasInitialLoadedRef.current = true;
+      lastPollAtRef.current = Date.now();
 
       if (showToast) {
+        setCachedCategories(null);
+        setCachedCms(null);
         toast.success("Storefront data synced");
       }
     } catch (err) {
@@ -116,17 +136,17 @@ export default function AdminDashboardPage() {
     }
   }, []);
 
-  // Silent background poll for instant new order visibility + toast notification
-  const pollNewOrders = useCallback(async () => {
-    if (!hasInitialLoadedRef.current) return;
+  // Silent background poll for new order visibility + toast notification
+  const pollNewOrders = useCallback(async (force = false) => {
+    if (!hasInitialLoadedRef.current || isPollingRef.current) return;
     if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+    const now = Date.now();
+    if (!force && now - lastPollAtRef.current < 10000) return;
 
+    isPollingRef.current = true;
+    lastPollAtRef.current = now;
     try {
-      const [ordersRes, paymentsRes] = await Promise.all([
-        adminApi.getOrders(),
-        adminApi.getPaymentOverview(),
-      ]);
-
+      const ordersRes = await adminApi.getOrders();
       if (!ordersRes.isLive) return;
 
       const newOrders = ordersRes.orders.filter(
@@ -148,12 +168,15 @@ export default function AdminDashboardPage() {
             },
           });
         }
+        const paymentsRes = await adminApi.getPaymentOverview();
+        setPaymentOverview(paymentsRes.overview);
       }
 
       setOrders(ordersRes.orders);
-      setPaymentOverview(paymentsRes.overview);
     } catch {
       // ignore transient poll failures
+    } finally {
+      isPollingRef.current = false;
     }
   }, []);
 
@@ -162,10 +185,10 @@ export default function AdminDashboardPage() {
   }, [loadData]);
 
   useEffect(() => {
-    const interval = setInterval(pollNewOrders, 4000);
+    const interval = setInterval(() => pollNewOrders(true), 30000);
     const onFocusOrVisible = () => {
       if (document.visibilityState === "visible") {
-        pollNewOrders();
+        pollNewOrders(false);
       }
     };
     window.addEventListener("focus", onFocusOrVisible);
@@ -246,6 +269,14 @@ export default function AdminDashboardPage() {
   ) => {
     const ok = await adminApi.updateCMS(section, data);
     if (ok) {
+      setCachedCms((prev) =>
+        prev
+          ? {
+              ...prev,
+              sections: { ...prev.sections, [section]: data },
+            }
+          : prev,
+      );
       toast.success("Section saved and live on storefront");
     } else {
       toast.error("Failed to save section changes");
@@ -354,6 +385,8 @@ export default function AdminDashboardPage() {
               {activeTab === "products" && (
                 <ProductsView
                   products={products}
+                  initialCategories={cachedCategories}
+                  onCategoriesLoaded={setCachedCategories}
                   onAddProduct={handleAddProduct}
                   onDeleteProduct={handleDeleteProduct}
                   onRefresh={() => loadData(true)}
@@ -362,7 +395,13 @@ export default function AdminDashboardPage() {
 
               {activeTab === "revenue" && <RevenueView orders={orders} />}
 
-              {activeTab === "cms" && <CmsView onSaveCms={handleSaveCms} />}
+              {activeTab === "cms" && (
+                <CmsView
+                  initialCms={cachedCms}
+                  onCmsLoaded={setCachedCms}
+                  onSaveCms={handleSaveCms}
+                />
+              )}
             </>
           )}
         </main>
